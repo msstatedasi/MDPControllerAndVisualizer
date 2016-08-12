@@ -1,4 +1,4 @@
-/*
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -230,18 +230,20 @@ public class MyController extends DynamicMDPController {
             return Reward;
         }
         
-        public double getReward(List<GMEAction> acts) 
+        public double getReward(List<GMEAction> acts, List<DynamicMDPState> states) 
         {
             double sum = 0;
-            sum = dsc.getLocalPathReward(0, acts);
+            sum = dsc.getLocalPathReward(0, acts, states);
             return sum;
         }
         
-        public double getReward(GMEAction act)
+        public double getReward(GMEAction act, DynamicMDPState state)
         {
             List<GMEAction> singleAction = new ArrayList();
             singleAction.add(act);
-            return this.getReward(singleAction);
+            List<DynamicMDPState> singleState = new ArrayList();
+            singleState.add(state);
+            return this.getReward(singleAction, singleState);
         }
 
     public Hashtable<String, GMEAction> getActionMap() 

@@ -32,7 +32,7 @@ public class ActionValueContainer {
     
     public void addAction(DynamicMDPState s, DynamicMDPState result, GMEAction act)
     {
-        double value = controller.getReward(act);
+        double value = controller.getReward(act, s);
         rewardForAction.add(value);
         actionName.add(act.getName());
     }

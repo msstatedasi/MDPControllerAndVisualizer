@@ -330,8 +330,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
                     if(updateGraph)
                     {
                         thisVis.setUpData(false);              
-                        thisVis.updateVisualization(); 
-                        
+                        thisVis.updateVisualization();
                     }
                     thisVis.rehighlightPath(true, false);
                     prevNode = null;
@@ -368,7 +367,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
                 
                 Iterator iter = thisVis.nodeMap.get(container.states.get(i)).outEdges();
                 
-                TupleSet edges = thisVis.vis.getGroup("graph.edges");
+//                TupleSet edges = thisVis.vis.getGroup("graph.edges");
 //                Iterator<Tuple> iter = edges.tuples();
                 while(iter.hasNext())
                 {
@@ -382,10 +381,11 @@ public class FinalControlListener extends ControlAdapter implements Control {
                         if(i + 1 == container.actions.size())
                         {
                             ChangeCurrentState(thisVis.vis.getVisualItem("graph.edges", thisEdge), true);
+                            break;
                         }
                         else
                         {
-                            ChangeCurrentState(thisVis.vis.getVisualItem("graph.edges", thisEdge), false);
+                            ChangeCurrentState(thisVis.vis.getVisualItem("graph.edges", thisEdge), true);
                         }
                     }
                 }

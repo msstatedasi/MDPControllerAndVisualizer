@@ -413,7 +413,7 @@ public final class Visualizer
         Hashtable<String, GMEAction> definedActions = thisController.getActionMap();
         
         //largestAllowedReward is only used if degredation is set
-        double optimalReward = thisController.getReward(tree.actionsTaken);
+        double optimalReward = thisController.getReward(tree.actionsTaken, tree.statesTaken);
         double largestAllowedReward = optimalReward * (1 +(degredation/100));
         
         //The below loop takes every computeable state and puts them in arrays
@@ -454,7 +454,7 @@ public final class Visualizer
             if(degredation >= 0)
             {
                 //below are print statements that allow the programmer to see which paths were included
-                double thisReward = thisController.getReward(oneActionPath);
+                double thisReward = thisController.getReward(oneActionPath, onePath);
                 boolean containRemovedConnections = false;
                 
                 if(thisReward >= largestAllowedReward && !containRemovedConnections)
@@ -496,11 +496,11 @@ public final class Visualizer
         //edges is only the edges from initial state to target state
         for(int i = 0; i < edges.size(); i++)
         {
-            
+            Node srcNode = edges.get(i).getSourceNode();
+            DynamicMDPState srcState = (DynamicMDPState) srcNode.get("stateClass");
             VisualItem item = vis.getVisualItem("graph.edges", edges.get(i));
-                System.out.println(item.get("inPath"));
             GMEAction thisAction = (GMEAction) item.get("CriteriaAction");
-            item.set("reward", thisController.getReward(thisAction));
+            item.set("reward", thisController.getReward(thisAction, srcState));
             edgeItems.add(item);//this is used by dataDisplay later when we make buttons(When user clicks the button we want it to be 
                                 //as if the user actually clicked that edge).
                                 
@@ -541,8 +541,8 @@ public final class Visualizer
         {
             n.set("type", "node");
             n.set("state", thisController.getStateString(tree.statesTaken.get(i))); 
-            n.set("stateClass", tree.statesTaken.get(i));       
-            double stateValueFunction = thisController.getV(tree.statesTaken.get(i));
+            n.set("stateClass", tree.statesTaken.get(i));
+            double stateValueFunction = thisController.getV(tree.stateNodesTaken.get(i).s);
             double finalStateValueFunction = (double) Math.round(stateValueFunction * 100000) / 100000; //the math.round goes to 5 places(up to the decimal point)
             n.set("StateReward", finalStateValueFunction);
             nodes.add(n);
@@ -560,7 +560,7 @@ public final class Visualizer
                 edge.set("action", tree.actionsTaken.get(i).getName());
                 edge.set("CriteriaAction", tree.actionsTaken.get(i));
                 edge.set("ActionName", tree.actionsTaken.get(i).getName());
-                edge.set("reward", thisController.getReward(tree.actionsTaken.get(i)));
+                edge.set("reward", thisController.getReward(tree.actionsTaken.get(i), tree.statesTaken.get(i)));
             }
             
         }
@@ -629,7 +629,7 @@ public final class Visualizer
                                 e.set("action", visibleActions.get(i).get(j).getName());
                                 e.set("CriteriaAction", visibleActions.get(i).get(j));
                                 e.set("ActionName", visibleActions.get(i).get(j).getName());
-                                e.set("reward", thisController.getReward(visibleActions.get(i).get(j)));
+                                e.set("reward", thisController.getReward(visibleActions.get(i).get(j), visibleStates.get(i).get(j)));
                             }
                         }
                         flag = false;
@@ -701,7 +701,7 @@ public final class Visualizer
                     edge.set("action", visibleActions.get(i).get(j).getName());
                     edge.set("CriteriaAction", visibleActions.get(i).get(j));
                     edge.set("ActionName", visibleActions.get(i).get(j).getName());
-                    edge.set("reward", thisController.getReward(visibleActions.get(i).get(j)));
+                    edge.set("reward", thisController.getReward(visibleActions.get(i).get(j), visibleStates.get(i).get(j)));
                     nodeMap.put(visibleStates.get(i).get(j+1), n);
                 }
                 
@@ -788,7 +788,7 @@ public final class Visualizer
         List<DynamicMDPState> subOptimalPath = cs.convertToStateList();
         
         int stateCounter = 0;
-        int stop = subOptimalPath.size() - 2; //took off 1 for indexing and another 1 to stop edge at state before the final state
+        int stop = subOptimalPath.size() - 1;
         
         
         
@@ -977,6 +977,7 @@ public final class Visualizer
                 //the actions up without messing up the integrity of each seperate list
                 //in the compute state.  If only java provided a easy to use deep copy method.....sigh.....
                 List<GMEAction> proposedPath = new ArrayList();
+                List<DynamicMDPState> proposedPathStates = new ArrayList();
                 for(int k = 0; k < newCompute.prevActions.size(); k++)
                 {
                     proposedPath.add(newCompute.prevActions.get(k));
@@ -986,10 +987,19 @@ public final class Visualizer
                     GMEAction plannedAct = thisController.getActionMap().get(newCompute.ea.actionSequence.get(k).actionName());
                     proposedPath.add(plannedAct);
                 }
+                for(int k = 0; k < newCompute.prevStates.size(); k++)
+                {
+                    proposedPathStates.add(newCompute.prevStates.get(k).s);
+                }
+                proposedPathStates.add(newCompute.thisState.s);
+                for(int k = 0; k < newCompute.ea.stateSequence.size();k++)
+                {
+                    proposedPathStates.add((DynamicMDPState) newCompute.ea.stateSequence.get(k));
+                }
                 
-                double totalReward = thisController.getReward(proposedPath);
+                double totalReward = thisController.getReward(proposedPath, proposedPathStates);
                 
-                double optimalReward = thisController.getReward(tree.actionsTaken);
+                double optimalReward = thisController.getReward(tree.actionsTaken, tree.statesTaken);
                 double largestAllowedReward = optimalReward * (1 +(degredation/100));
                 
                 boolean alreadyComputed = false;
@@ -1207,20 +1217,20 @@ public final class Visualizer
     }
     
     
-    private double getRewardForComputeState(ComputeState compute)
-    {
-        List<GMEAction> actions = new ArrayList();
-        for(int i = 0; i < compute.prevActions.size(); i++)
-        {
-            actions.add(compute.prevActions.get(i));
-        }
-        for(int i = 0; i < compute.ea.actionSequence.size(); i++)
-        {
-            GMEAction act = thisController.getActionMap().get(compute.ea.actionSequence.get(i).actionName());
-            actions.add(act);
-        }
-        return thisController.getReward(actions);
-    }
+//    private double getRewardForComputeState(ComputeState compute)
+//    {
+//        List<GMEAction> actions = new ArrayList();
+//        for(int i = 0; i < compute.prevActions.size(); i++)
+//        {
+//            actions.add(compute.prevActions.get(i));
+//        }
+//        for(int i = 0; i < compute.ea.actionSequence.size(); i++)
+//        {
+//            GMEAction act = thisController.getActionMap().get(compute.ea.actionSequence.get(i).actionName());
+//            actions.add(act);
+//        }
+//        return thisController.getReward(actions);
+//    }
 
     private StateNode findInTree(DynamicMDPState s)
     {

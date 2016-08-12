@@ -169,7 +169,7 @@ public class DataDisplay implements ItemListener
         {
             rewards[i] = (double) Math.round(rewards[i] * 100000) / 100000;
         }
-        reward = controller.getReward(t.actionsTaken);
+        reward = controller.getReward(t.actionsTaken, t.statesTaken);
         reward = (double) Math.round(reward * 100000) / 100000;
         
         cost.setText("Cost: " + String.valueOf(rewards[0]));
