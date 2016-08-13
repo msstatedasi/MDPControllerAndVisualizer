@@ -406,7 +406,7 @@ public final class Visualizer
             vis.cancel("layout");
             vis.removeAction("color");
             vis.removeAction("layout");
-            vis.repaint();
+//            vis.repaint();
             graph.clear();
         }
         
