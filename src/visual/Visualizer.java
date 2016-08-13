@@ -117,6 +117,7 @@ public final class Visualizer
     boolean pinkNode;
     boolean containsSubOptimalPath;
     boolean containsNonOptimalPath;
+    int index;
     
     
     
@@ -147,8 +148,9 @@ public final class Visualizer
      * @throws IOException
      * @throws ParseException 
      */
-    public Visualizer(StateTree tree, List<String> allAttribs, List<GMEAction> actions, MyController controller, double degredation) throws IOException, ParseException, FinalStateException
+    public Visualizer(StateTree tree, List<String> allAttribs, List<GMEAction> actions, MyController controller, double degredation, int index) throws IOException, ParseException, FinalStateException
     {
+        this.index = index;
         nodeMap = new HashMap<>();
         thisController = controller;
         actionValueContainer = new ActionValueContainer(thisController);
@@ -200,7 +202,7 @@ public final class Visualizer
     public void setUpDisplay()
     {
 //        mouse = new FinalControlListener(); //create listener
-        dataDisplay = new DataDisplay(tree, this.allAtrribs, thisController,edgeItems, mouse); //set up the dataDisplay(mouse is needed for buttons)
+        dataDisplay = new DataDisplay(tree, this.allAtrribs, thisController,edgeItems, mouse, index); //set up the dataDisplay(mouse is needed for buttons)
         dataDisplay.setUpCharts("no action", null, null);//set charts up with nothing selected
         mouse.setDataDisplay(dataDisplay);//and let mouse have control of dataDisplay(To set up tables when user clicks)
         mouse.setVisualizer(this);
@@ -364,6 +366,7 @@ public final class Visualizer
      */
     public void setUpData(boolean init) throws ParseException, FinalStateException
     {
+        if(lastComputeState != null && thisController.isTerminal(index, lastComputeState.thisState.s)) this.closeWindows();
         nodes = new ArrayList<>();
         edgeItems = new ArrayList<>();
         edges = new ArrayList<>();
@@ -410,7 +413,7 @@ public final class Visualizer
         visibleStates = new ArrayList();
         visibleActions = new ArrayList();
         
-        Hashtable<String, GMEAction> definedActions = thisController.getActionMap();
+        Hashtable<String, GMEAction> definedActions = thisController.getActionMap(index);
         
         //largestAllowedReward is only used if degredation is set
         double optimalReward = thisController.getReward(tree.actionsTaken, tree.statesTaken);
@@ -542,7 +545,7 @@ public final class Visualizer
             n.set("type", "node");
             n.set("state", thisController.getStateString(tree.statesTaken.get(i))); 
             n.set("stateClass", tree.statesTaken.get(i));
-            double stateValueFunction = thisController.getV(tree.stateNodesTaken.get(i).s);
+            double stateValueFunction = thisController.getV(index, tree.stateNodesTaken.get(i).s);
             double finalStateValueFunction = (double) Math.round(stateValueFunction * 100000) / 100000; //the math.round goes to 5 places(up to the decimal point)
             n.set("StateReward", finalStateValueFunction);
             nodes.add(n);
@@ -709,14 +712,14 @@ public final class Visualizer
                 n.set("state", thisController.getStateString(visibleStates.get(i).get(j+1))); 
                 n.set("stateClass", visibleStates.get(i).get(j+1));  
                 prevState = visibleStates.get(i).get(j+1);
-                double stateValueFunction = thisController.getV(visibleStates.get(i).get(j+1));
+                double stateValueFunction = thisController.getV(index, visibleStates.get(i).get(j+1));
                 double finalStateValueFunction = (double) Math.round(stateValueFunction * 100000) / 100000; //the math.round goes to 5 places(up to the decimal point)
                 n.set("StateReward", finalStateValueFunction);
                 
                 
                 
 
-                if(thisController.isTerminal(visibleStates.get(i).get(j+1)))
+                if(thisController.isTerminal(index, visibleStates.get(i).get(j+1)))
                 {
                     n.set("nodeInfo", 0); //blue node
                 }
@@ -747,7 +750,7 @@ public final class Visualizer
             DynamicMDPState currentState = tree.statesTaken.get(i);
             DynamicMDPState nextState = tree.statesTaken.get(i + 1);
             
-            if(thisController.isTerminal(nextState))
+            if(thisController.isTerminal(index, nextState))
             {
                 n2.set("nodeInfo", 0); //blue node
             }
@@ -820,10 +823,11 @@ public final class Visualizer
             Node nodeSrc = graph.getNode(indexSrc);
             Node nodeTarget = graph.getNode(indexTarget);
             
-            stateValueContainer.addStateValue(thisController.getV(src.s));
+            stateValueContainer.addStateValue(thisController.getV(index, src.s));
             actionValueContainer.addAction(src.s, target.s, src.checkIfResultState(target.s));
             
-            if(!target.isTerminal()) nodeTarget.set("nodeInfo", 2); //purple nodes
+            
+            if(!thisController.isTerminal(index, target.s)) nodeTarget.set("nodeInfo", 2); //purple nodes
             if(!nodeSrc.equals(nodeTarget)) //if the result state is the same as the src then nothing needs to happen
             {
                 Edge e = graph.getEdge(nodeSrc, nodeTarget); //get the edge between the nodes
@@ -960,7 +964,7 @@ public final class Visualizer
                 
                 if(found == false)
                 {
-                    newCompute.ea = thisController.getOptimalPathFrom(0, connect.nodes.get(j).s);
+                    newCompute.ea = thisController.getOptimalPathFrom(this.index, connect.nodes.get(j).s);
                     newCompute.ea.stateSequence.remove(0); //the first stateSequence is the current state which is already included so get rid of it
                 }
                 else
@@ -984,7 +988,7 @@ public final class Visualizer
                 }
                 for(int k = 0; k < newCompute.ea.actionSequence.size(); k++)
                 {
-                    GMEAction plannedAct = thisController.getActionMap().get(newCompute.ea.actionSequence.get(k).actionName());
+                    GMEAction plannedAct = thisController.getActionMap(index).get(newCompute.ea.actionSequence.get(k).actionName());
                     proposedPath.add(plannedAct);
                 }
                 for(int k = 0; k < newCompute.prevStates.size(); k++)
@@ -1077,7 +1081,7 @@ public final class Visualizer
         {
             lastComputeState = new ComputeState();
             lastComputeState.thisState = initState;
-            lastComputeState.ea = thisController.getEpisode();
+            lastComputeState.ea = thisController.getEpisode(0);
             List<State> stateSeq = new ArrayList();
             List<Action> actionSeq = new ArrayList();
             for(int i = 1; i < lastComputeState.ea.stateSequence.size(); i++)

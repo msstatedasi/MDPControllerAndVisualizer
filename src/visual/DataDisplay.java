@@ -90,6 +90,8 @@ public class DataDisplay implements ItemListener
     HashMap<String, DefaultMutableTreeNode> actionNodeMap;
     HashMap<String, DefaultMutableTreeNode> resultStateNodeMap;
     
+    int index;
+    
     /**
      * When called this frame is disposed of.
      */
@@ -111,8 +113,9 @@ public class DataDisplay implements ItemListener
      * @param takenActionItems the actions(in item form) of the actions taken
      * @param fcl The mouse control listener(used for when user clicks a button)
      */
-    public DataDisplay(StateTree t, List<String> allStateAttribs, MyController controller, List<VisualItem> takenActionItems, FinalControlListener fcl)
+    public DataDisplay(StateTree t, List<String> allStateAttribs, MyController controller, List<VisualItem> takenActionItems, FinalControlListener fcl, int index)
     {
+        this.index = index;
         ignoreDegCheckBox = new JCheckBox("Ignore degredation");
         ignoreDegCheckBox.addItemListener(this);
         
@@ -529,7 +532,7 @@ public class DataDisplay implements ItemListener
     private List<String> compareAttributes(DynamicMDPState s1, DynamicMDPState s2)
     {
         if(s2 == null) return null; //s1 will always be srcState but targetState may be null
-        List<String> attrNames = myController.getAllStateAttributes();
+        List<String> attrNames = myController.getAllStateAttributes(index);
         List<String> differingValues = new ArrayList<>();
 //        List<Value> attrValue1 = myController.getAllStateValuesFor(s1);
 //        List<Value> attrValue2 = myController.getAllStateValuesFor(s2);
@@ -562,11 +565,12 @@ public class DataDisplay implements ItemListener
         public void valueChanged(TreeSelectionEvent e) 
         {
            DefaultMutableTreeNode node = (DefaultMutableTreeNode) actionTree.getLastSelectedPathComponent();
+           System.out.println("we are screwing with " + node.getUserObject().toString());
            
            if(node == null) return;
            
            String actionName = prefix + node.getUserObject().toString().split(" = ")[0];
-           GMEAction a = myController.getActionMap().get(actionName);
+           GMEAction a = myController.getActionMap(index).get(actionName);
            
            if(a == null) return;
            
@@ -582,14 +586,13 @@ public class DataDisplay implements ItemListener
            if(frame == null)
            {
                 frame = new JFrame();
-                table = new JTable(values, attributeNamesArr);
-                scroll = new JScrollPane(table);
-                panel = new JPanel();
-                panel.add(scroll);
            }
            
 
-           
+           table = new JTable(values, attributeNamesArr);
+                scroll = new JScrollPane(table);
+                panel = new JPanel();
+                panel.add(scroll);
            
            frame.add(panel);
            frame.pack();

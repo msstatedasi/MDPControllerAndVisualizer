@@ -365,16 +365,21 @@ public class FinalControlListener extends ControlAdapter implements Control {
             for(int i = 0; i < container.actions.size(); i++) 
             {
                 
-                Iterator iter = thisVis.nodeMap.get(container.states.get(i)).outEdges();
+//                Node currentNode = thisVis.nodeMap.get(container.states.get(i));
+                
+                
+                Iterator iter = thisVis.nodeMap.get(container.states.get(i)).childEdges();
                 
 //                TupleSet edges = thisVis.vis.getGroup("graph.edges");
 //                Iterator<Tuple> iter = edges.tuples();
                 while(iter.hasNext())
                 {
-                    Tuple thisEdge = (Tuple) iter.next();
-                    if(thisEdge.get("CriteriaAction").equals(container.actions.get(i)) && 
-                            thisEdge.get("srcState").equals(currentState.get("stateClass"))&&
-                            thisEdge.get("resultState").equals(container.states.get(i+1)))
+                    System.out.println("here");
+                    Edge thisEdge = (Edge) iter.next();
+                    Tuple thisTuple = thisVis.vis.getVisualItem("graph.edges", thisEdge);
+                    if(thisTuple.get("CriteriaAction").equals(container.actions.get(i)) && 
+                            thisTuple.get("srcState").equals(currentState.get("stateClass"))&&
+                            thisTuple.get("resultState").equals(container.states.get(i+1)))
                     {   
                         
 
@@ -386,6 +391,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
                         else
                         {
                             ChangeCurrentState(thisVis.vis.getVisualItem("graph.edges", thisEdge), true);
+                            break;
                         }
                     }
                 }

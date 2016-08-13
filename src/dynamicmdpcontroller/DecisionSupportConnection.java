@@ -63,7 +63,8 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public List<String> getAllStateAttributes(DynamicMDPState s) {
         List<Object> keys = s.variableKeys();
         List<String> ret = new ArrayList<>(keys.size());
-        for (Object o : keys) {
+        for (Object o : keys) 
+        {
             ret.add((String) o);
         }
         return ret;
@@ -208,55 +209,34 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     }
 
     @Override
-    public DynamicMDPState getInitalState() 
+    public DynamicMDPState getInitalState(int index) 
     {
-        return this.localControllers[0].getInitState();
+        return this.localControllers[index].getInitState();
     }
 
     @Override
-    public List<DynamicMDPState> getAllStates() {
+    public List<DynamicMDPState> getAllStates(int index) {
         List<DynamicMDPState> allStates = new ArrayList();
         List<DynamicMDPState> toCompute = new ArrayList();
-        toCompute.add(this.getInitalState());
-        allStates.add(this.getInitalState());
+        toCompute.add(this.getInitalState(index));
+        allStates.add(this.getInitalState(index));
         
         for(int i = 0; i < toCompute.size(); i++)
         {
             System.out.println(toCompute.size());
-            for(int j = 0; j < this.getAllLocalDefinedActions(0).size(); j++)
+            for(int j = 0; j < this.getAllLocalDefinedActions(index).size(); j++)
             {
-                GMEAction a = (GMEAction) this.getAllLocalDefinedActions(0).get(j);
+                GMEAction a = (GMEAction) this.getAllLocalDefinedActions(index).get(j);
                 DynamicMDPState s = toCompute.get(i);
                 List<DynamicMDPState> resultStates = this.getResultingStates(s.copy(), a);
                 
                 for (DynamicMDPState resultState : resultStates) 
                 {
-//                    boolean contains = false;
-//                    System.out.println(allStates.contains(this.getInitalState()));
                     if(!toCompute.contains(resultState))
                     {
                         toCompute.add(resultState);
                         allStates.add(resultState);
                     }
-//                    for(int b = 0; b < toCompute.size(); b++)
-//                    {
-//                        if(toCompute.get(b).getAttributes().equals(resultState.getAttributes()))
-//                        {
-//                            contains = true;
-//                        }
-//                    }
-//                    if(!contains) toCompute.add(resultState);
-//                    contains = false;
-//                    
-//                    
-//                    for(int b = 0; b < allStates.size(); b++)
-//                    {
-//                        if(allStates.get(b).getAttributes().equals(resultState.getAttributes()))
-//                        { 
-//                            contains = true;
-//                        }
-//                    }
-//                    if(!contains) allStates.add(resultState);
                 }
             }
         }
@@ -281,9 +261,9 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     }
 
     @Override
-    public boolean isTerminalState(DynamicMDPState s) 
+    public boolean isTerminalState(int index, DynamicMDPState s) 
     {
-        return localControllers[0].getTf().isTerminal(s);
+        return localControllers[index].getTf().isTerminal(s);
     }
 
     @Override
@@ -304,5 +284,15 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     {
         Episode e = localControllers[index].getOptimalPathFrom(s);
         return e;
+    }
+
+    @Override
+    public int getNumOfLocalControllers() {
+        return this.localControllers.length;
+    }
+
+    @Override
+    public String getNameOfController(int index) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose 
     }
 }

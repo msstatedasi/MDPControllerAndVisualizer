@@ -10,9 +10,20 @@ import Tree.StateTree;
 import dynamicmdpcontroller.DecisionSupportConnection;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.actions.GMEAction;
+import dynamicmdpcontroller.controllers.FinalStateException;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import visual.Visualizer;
 
 /**
@@ -22,11 +33,13 @@ import visual.Visualizer;
  * @author Justin Lewis
  */
 public class Manager {
-
+    MyController c;
     HashMap<DynamicMDPState, StateNode> nodes; //list of all nodes in state space
     List<DynamicMDPState> takenStates;//list of all the states taken
     List<GMEAction> takenActions;//list of all the actions taken
     Visualizer MDPvisual;//an instance of the visualizer
+    double degredation;
+    
 
     /**
      * This function is only called by {@link BurlapVisualizer.TestProject} when the
@@ -61,32 +74,81 @@ public class Manager {
      */
     public void run(double cost, double time, double gamma, double degredation) throws Exception 
     {
+        this.degredation = degredation;
+        c = new MyController(cost, time, gamma);//this sets up and solves the MDP solution
         
-        MyController c = new MyController(cost, time, gamma);//this sets up and solves the MDP solution
+        int numOfControllers = c.getNumOfLocalControllers();
+        JPanel panel = new JPanel(new GridLayout(0, 3));
         
-        List<String> allAttribs = c.getAllStateAttributes();
+        for(int i = 0; i < numOfControllers; i++)
+        {
+            JButton controllerButton = new JButton();
+            controllerButton.setText("Local Controller " + Integer.toString(i));
+            controllerButton.addActionListener(new buttonAction(controllerButton));
+            panel.add(controllerButton);
+        }
+        JFrame frame = new JFrame();
+        frame.add(panel);
+        frame.pack();
+        frame.setVisible(true);
+        
 
-
-        nodes = c.getEntireStateSpaceAndConnections();//nodes is a list that contains trees with a height of at most 2.
-                                                      //for more info about what c.getEntireStateSpaceAndConnections() does look
-                                                      //at the JavaDoc
-                                                      
-                                         
-        DecisionSupportConnection dsc = new DecisionSupportConnection();
-        takenActions = dsc.getLocalOptimalPathActions(0, dsc.getInitalState());//the actions taken from intial state to target state
-        takenStates = dsc.getLocalOptimalPath(0, dsc.getInitalState());//the states taken from intial state to target state
-
-        List<GMEAction> allPosActions = dsc.getAllLocalDefinedActions(0);//this is a list of every action that the MDP has defined
+    }
+    
+    public class buttonAction implements ActionListener
+    {
+        JButton button;
         
+        public buttonAction(JButton button)
+        {
+            this.button = button;
+        }
         
-        //now we have all our data we need for the visualizer.
-        //To make things easier I created the StateTree class which can wrap all
-        //this data into one nice data structure
-        StateTree tree = new StateTree(dsc.getInitalState(), nodes, allPosActions);
-        tree.setTakenActions(takenActions);
-        tree.setStatesTaken(takenStates);
-        tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
+        @Override
+        public void actionPerformed(ActionEvent e) 
+        {
+            try 
+            {
+                this.button.setEnabled(false);
+                int length = e.getActionCommand().split(" ").length;
+                System.out.println(e.getActionCommand().split(" ")[length - 1]);
+                int index = Integer.parseInt(e.getActionCommand().split(" ")[length - 1]);
+                
+                
+                
+                
+                
+                
+                
+                List<String> allAttribs = c.getAllStateAttributes(index);
+                
+                
+                nodes = c.getEntireStateSpaceAndConnections(index);//nodes is a list that contains trees with a height of at most 2.
+                //for more info about what c.getEntireStateSpaceAndConnections() does look
+                //at the JavaDoc
+                
+                
+                DecisionSupportConnection dsc = new DecisionSupportConnection();
+                takenActions = dsc.getLocalOptimalPathActions(index, dsc.getInitalState(index));//the actions taken from intial state to target state
+                takenStates = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));//the states taken from intial state to target state
+                
+                List<GMEAction> allPosActions = dsc.getAllLocalDefinedActions(index);//this is a list of every action that the MDP has defined
+                
+                
+                //now we have all our data we need for the visualizer.
+                //To make things easier I created the StateTree class which can wrap all
+                //this data into one nice data structure
+                StateTree tree = new StateTree(dsc.getInitalState(index), nodes, allPosActions);
+                tree.setTakenActions(takenActions);
+                tree.setStatesTaken(takenStates);
+                tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
+                
+                MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation, index);//the visualizer takes over from here
+                
+            } catch (FinalStateException | IOException | ParseException ex) {
+                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         
-        MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation);//the visualizer takes over from here
     }
 }

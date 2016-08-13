@@ -60,15 +60,19 @@ public class MyController extends DynamicMDPController {
 //        dsc.printState(dsc.getInitalState());
     }
     
+    public int getNumOfLocalControllers()
+    {
+        return dsc.getNumOfLocalControllers();
+    }
 
     
     /**
      * This basically actions as a getter function to grab the state Sequence.
      * @return List of states taken to get to the target state 
      */
-    public List<DynamicMDPState> getStateSequenceToTarget() throws FinalStateException
+    public List<DynamicMDPState> getStateSequenceToTarget(int index) throws FinalStateException
     {
-        return dsc.getLocalOptimalPath(0, dsc.getInitalState());
+        return dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
     }
     
     public double getGamma()
@@ -100,9 +104,9 @@ public class MyController extends DynamicMDPController {
      * @return List of {@link Tree.StateNode StateNode} that contains all the resulting states given any arbitrary state.
      * @throws IOException 
      */
-    public HashMap<DynamicMDPState, StateNode> getEntireStateSpaceAndConnections() throws IOException
+    public HashMap<DynamicMDPState, StateNode> getEntireStateSpaceAndConnections(int index) throws IOException
     {
-        List<DynamicMDPState> states = dsc.getAllStates(); //get all possible states
+        List<DynamicMDPState> states = dsc.getAllStates(index); //get all possible states
 
         List<GMEAction> allListActions = dsc.getAllLocalDefinedActions(0);
         Hashtable<String, GMEAction> map = new Hashtable<>();
@@ -143,10 +147,10 @@ public class MyController extends DynamicMDPController {
     }
     
 
-    public Episode getEpisode() throws FinalStateException
+    public Episode getEpisode(int index) throws FinalStateException
     {
-        List<DynamicMDPState> states = dsc.getLocalOptimalPath(0, dsc.getInitalState());
-        List<GMEAction> actions = dsc.getLocalOptimalPathActions(0, dsc.getInitalState());
+        List<DynamicMDPState> states = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
+        List<GMEAction> actions = dsc.getLocalOptimalPathActions(index, dsc.getInitalState(index));
         Episode e = new Episode();
         
         for(DynamicMDPState s: states)
@@ -193,11 +197,9 @@ public class MyController extends DynamicMDPController {
      * and value pair go together.  For example index 1 refers to the same attribute in the lists returned by both functions.
      * @return List of all the names of the attributes any state has in the state space
      */
-    public List<String> getAllStateAttributes()
+    public List<String> getAllStateAttributes(int index)
     {
-        
-//        List<String> attribNames = new ArrayList<>();
-        return dsc.getAllStateAttributes(dsc.getInitalState());
+        return dsc.getAllStateAttributes(dsc.getInitalState(index));
     }
 
     
@@ -246,10 +248,10 @@ public class MyController extends DynamicMDPController {
             return this.getReward(singleAction, singleState);
         }
 
-    public Hashtable<String, GMEAction> getActionMap() 
+    public Hashtable<String, GMEAction> getActionMap(int index) 
     {
         Hashtable<String, GMEAction> table  = new Hashtable<>();
-        List<GMEAction> allActions = dsc.getAllLocalDefinedActions(0);
+        List<GMEAction> allActions = dsc.getAllLocalDefinedActions(index);
         for(GMEAction a:allActions)
         {
             table.put(a.actionName(), a);
@@ -257,14 +259,14 @@ public class MyController extends DynamicMDPController {
         return table;
     }
 
-    public double getV(DynamicMDPState get) throws FinalStateException 
+    public double getV(int index, DynamicMDPState get) throws FinalStateException 
     {
-        return dsc.getLocalStateValue(0, get);
+        return dsc.getLocalStateValue(index, get);
     }
     
-    public boolean isTerminal(DynamicMDPState s)
+    public boolean isTerminal(int index, DynamicMDPState s)
     {
-        return dsc.isTerminalState(s);
+        return dsc.isTerminalState(index, s);
     }
 
     public Episode getOptimalPathFrom(int index, DynamicMDPState s) throws FinalStateException 

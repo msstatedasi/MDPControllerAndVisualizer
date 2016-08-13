@@ -34,8 +34,12 @@ public interface DecisionSupportInterface {
     double getLocalStateValue(int index, DynamicMDPState s) throws FinalStateException;
     double getGlobalStateValue(DynamicMDPState s) throws FinalStateException;
     
-    DynamicMDPState getInitalState();
-    List<DynamicMDPState> getAllStates();
+    DynamicMDPState getInitalState(int index);
+    List<DynamicMDPState> getAllStates(int index);
     List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction a);
-    boolean isTerminalState(DynamicMDPState s);
+    boolean isTerminalState(int index, DynamicMDPState s);
+    
+    
+    int getNumOfLocalControllers();
+    String getNameOfController(int index);
 }

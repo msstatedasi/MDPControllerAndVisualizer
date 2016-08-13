@@ -27,15 +27,6 @@ public class StateNode {
         connections = new Hashtable<>();
     }
 
-    /**
-     * This function determines if its state is a final state.
-     * @return true if state is terminal.  False otherwise
-     */
-    public boolean isTerminal()
-    {
-        DecisionSupportConnection dsc = new DecisionSupportConnection();
-        return dsc.isTerminalState(this.s);
-    }
 
     /**
      * This function is just a setter for this instance's state

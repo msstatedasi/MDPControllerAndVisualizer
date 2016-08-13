@@ -55,7 +55,7 @@ public class Reward implements RewardFunction {
 
     private double rewardFunction(GMEAction a) 
     {
-        double ret = -wt * a.getExecTime()/maxExecutionTime - wc * a.getCost()/maxCost;
+        double ret = -wt * a.getExecTime() - wc * a.getCost();
 //                / (maxExecutionTime - minExecutionTime + 1 ) 
         return ret;
     }
