@@ -565,7 +565,6 @@ public class DataDisplay implements ItemListener
         public void valueChanged(TreeSelectionEvent e) 
         {
            DefaultMutableTreeNode node = (DefaultMutableTreeNode) actionTree.getLastSelectedPathComponent();
-           System.out.println("we are screwing with " + node.getUserObject().toString());
            
            if(node == null) return;
            
@@ -589,10 +588,11 @@ public class DataDisplay implements ItemListener
            }
            
 
-           table = new JTable(values, attributeNamesArr);
-                scroll = new JScrollPane(table);
-                panel = new JPanel();
-                panel.add(scroll);
+            table = new JTable(values, attributeNamesArr);
+            table.setEnabled(false);
+            scroll = new JScrollPane(table);
+            panel = new JPanel();
+            panel.add(scroll);
            
            frame.add(panel);
            frame.pack();

@@ -193,9 +193,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
             localEpisode[index] = localControllers[index].getEpisode();
         }
         if(localControllers[index].getPlanner().value(s) != 0) return localControllers[index].getPlanner().value(s); //ask stefano here
-//ValueIteration test = localControllers[index].getPlanner();
         return localControllers[index].getPlanner().performBellmanUpdateOn(s);
-//        return localControllers[index].getPlanner().value(s);
     }
 
     @Override
@@ -226,7 +224,9 @@ public class DecisionSupportConnection implements DecisionSupportInterface
             System.out.println(toCompute.size());
             for(int j = 0; j < this.getAllLocalDefinedActions(index).size(); j++)
             {
+                
                 GMEAction a = (GMEAction) this.getAllLocalDefinedActions(index).get(j);
+                
                 DynamicMDPState s = toCompute.get(i);
                 List<DynamicMDPState> resultStates = this.getResultingStates(s.copy(), a);
                 
@@ -275,7 +275,6 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     @Override
     public Object getValueForAttribute(DynamicMDPState s, String str) 
     {
-//        String fullStr = "Network_Server_ServiceGroup_" + str;
         return s.getAttributes().get(str);
     }
 
@@ -287,12 +286,14 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     }
 
     @Override
-    public int getNumOfLocalControllers() {
+    public int getNumOfLocalControllers() 
+    {
         return this.localControllers.length;
     }
 
     @Override
-    public String getNameOfController(int index) {
+    public String getNameOfController(int index) 
+    {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose 
     }
 }

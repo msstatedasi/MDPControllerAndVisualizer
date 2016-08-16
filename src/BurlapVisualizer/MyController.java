@@ -57,7 +57,6 @@ public class MyController extends DynamicMDPController {
         nodes = new HashMap<>();
         this.gamma = gamma;
         dsc = new DecisionSupportConnection();
-//        dsc.printState(dsc.getInitalState());
     }
     
     public int getNumOfLocalControllers()
@@ -146,7 +145,7 @@ public class MyController extends DynamicMDPController {
         return nodes; //finally return our list of nodes with possible states
     }
     
-
+    //this function gets only the OPTIMAL episode in each local Controller
     public Episode getEpisode(int index) throws FinalStateException
     {
         List<DynamicMDPState> states = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
@@ -167,6 +166,8 @@ public class MyController extends DynamicMDPController {
     {
         dsc.printState(s);
     }
+    
+    
     public List<String> allDefinedActions(int index)
     {
         List<GMEAction> actions = dsc.getAllLocalDefinedActions(index);

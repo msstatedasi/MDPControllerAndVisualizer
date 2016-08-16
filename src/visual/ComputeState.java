@@ -7,9 +7,12 @@ package visual;
 
 import Tree.StateNode;
 import burlap.behavior.singleagent.Episode;
+import burlap.mdp.core.action.Action;
+import burlap.mdp.core.state.State;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.actions.GMEAction;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -50,6 +53,42 @@ public class ComputeState
         return s;
     }
     
+    public List<DynamicMDPState> getEffectiveStateList()
+    {
+        List<DynamicMDPState> effectiveList = new ArrayList();
+        for(StateNode sn: this.prevStates)
+        {
+            effectiveList.add(sn.s);
+        }
+        effectiveList.add(thisState.s);
+        
+        if(!validEa) return effectiveList;
+        
+        for (State s : ea.stateSequence) 
+        {
+            DynamicMDPState ds = (DynamicMDPState) s;
+            effectiveList.add(ds);
+        }
+        return effectiveList;
+    }
+    public List<GMEAction> getEffectiveActionList()
+    {
+        List<GMEAction> effectiveList = new ArrayList();
+        for(GMEAction act : this.prevActions)
+        {
+            effectiveList.add(act);
+        }
+        
+        if(!validEa) return effectiveList;
+        
+        for(Action a : ea.actionSequence)
+        {
+            GMEAction act = (GMEAction) a;
+            effectiveList.add(act);
+        }
+        return effectiveList;
+    }
+    
     public boolean checkForDuplicates()
     {
         List<DynamicMDPState> list = this.convertToStateList();
@@ -64,5 +103,17 @@ public class ComputeState
             }
         }
         return false;
+    }
+    public void addStates(List<StateNode> prevStates, StateNode thisState, List<DynamicMDPState> postStates)
+    {
+        for(StateNode sn: prevStates)
+        {
+            this.prevStates.add(sn);
+        }
+        this.thisState = thisState;
+        for(DynamicMDPState ds: postStates)
+        {
+            this.ea.stateSequence.add(ds);
+        }
     }
 }

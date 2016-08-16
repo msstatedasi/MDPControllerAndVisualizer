@@ -201,12 +201,11 @@ public final class Visualizer
      */
     public void setUpDisplay()
     {
-//        mouse = new FinalControlListener(); //create listener
         dataDisplay = new DataDisplay(tree, this.allAtrribs, thisController,edgeItems, mouse, index); //set up the dataDisplay(mouse is needed for buttons)
         dataDisplay.setUpCharts("no action", null, null);//set charts up with nothing selected
         mouse.setDataDisplay(dataDisplay);//and let mouse have control of dataDisplay(To set up tables when user clicks)
         mouse.setVisualizer(this);
-        mouse.currentState = (NodeItem) vis.getVisualItem("graph.nodes", nodes.get(0));
+        mouse.currentState = (NodeItem) vis.getVisualItem("graph.nodes", nodes.get(0));//set mouses current state to the intial state
                         
         d = new Display(vis);
         d.setSize(900, 900);
@@ -215,8 +214,6 @@ public final class Visualizer
         d.addControlListener(new ZoomControl());
         d.addControlListener(new WheelZoomControl());
         d.addControlListener(mouse); //controls when you click node or edge
-        
-//        panel.add(d);
         
         frame = new JFrame("Burlap Visualizer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -366,7 +363,11 @@ public final class Visualizer
      */
     public void setUpData(boolean init) throws ParseException, FinalStateException
     {
+        //this checks to see 
         if(lastComputeState != null && thisController.isTerminal(index, lastComputeState.thisState.s)) this.closeWindows();
+        
+        //the following variables need to be refreashed every time the
+        //the visualizer refreashes
         nodes = new ArrayList<>();
         edgeItems = new ArrayList<>();
         edges = new ArrayList<>();
@@ -404,9 +405,9 @@ public final class Visualizer
             //an empty graph so we will stop them
             vis.cancel("color");
             vis.cancel("layout");
+            //we remove them because these actions have a tendency to change
             vis.removeAction("color");
             vis.removeAction("layout");
-//            vis.repaint();
             graph.clear();
         }
         
@@ -422,64 +423,30 @@ public final class Visualizer
         //The below loop takes every computeable state and puts them in arrays
         for(int i = 0; i < computableStates.size(); i++)
         {
-            List<DynamicMDPState> onePath = new ArrayList();
-            List<GMEAction> oneActionPath = new ArrayList();
-            for(int j = 0; j < computableStates.get(i).prevStates.size(); j++)
-            {
-                onePath.add(computableStates.get(i).prevStates.get(j).s);
-            }
-            onePath.add(computableStates.get(i).thisState.s);
-            
-            if(computableStates.get(i).validEa)
-            {
-                for(int j = 0; j < computableStates.get(i).ea.stateSequence.size(); j++)
-                {
-                    onePath.add((DynamicMDPState) computableStates.get(i).ea.stateSequence.get(j));
-                }
-            }
-            for(int j = 0; j < computableStates.get(i).prevActions.size(); j++)
-            {
-                oneActionPath.add(computableStates.get(i).prevActions.get(j));
-            }
-            if(computableStates.get(i).validEa)
-            {
-                for(int j = 0; j < computableStates.get(i).ea.actionSequence.size();j++)
-                {
-                    String actName = computableStates.get(i).ea.actionSequence.get(j).actionName();
-                    GMEAction act = definedActions.get(actName);
-                    oneActionPath.add(act);
-                }
-            }
+            List<DynamicMDPState> onePath = computableStates.get(i).getEffectiveStateList();
+            List<GMEAction> oneActionPath = computableStates.get(i).getEffectiveActionList();
 
-            
-            //will soon implement the compute states to not include anything above degredataion 
-            //which will remove the need for this if
-            if(degredation >= 0)
+            double thisReward = thisController.getReward(oneActionPath, onePath);
+            //if degredation is set and it meets it
+            if(degredation >= 0 && thisReward >= largestAllowedReward)
             {
-                //below are print statements that allow the programmer to see which paths were included
-                double thisReward = thisController.getReward(oneActionPath, onePath);
-                boolean containRemovedConnections = false;
-                
-                if(thisReward >= largestAllowedReward && !containRemovedConnections)
-                {
-                    visibleStates.add(onePath);
-                    visibleActions.add(oneActionPath);
-                }
+                visibleStates.add(onePath);
+                visibleActions.add(oneActionPath);   
             }
+            //else the degredation is not set which means the total reward does not matter
             else
             {
                 visibleStates.add(onePath);
                 visibleActions.add(oneActionPath);
             }
         }
-
-        
         
         setUpNodes(init);
-        setPrefuseNodeConnections();
+//        setPrefuseNodeConnections();
         setDefaultEdgeData();
         handleSubPathToTarget();
         handlePathToTarget();
+        //if this is not the first time to visualize then reset the pallettes for state and edge coloring
         if(!init)
         {
             setStatePallette(false);
@@ -496,18 +463,6 @@ public final class Visualizer
      */
     private void setItems()
     {
-        //edges is only the edges from initial state to target state
-        for(int i = 0; i < edges.size(); i++)
-        {
-            Node srcNode = edges.get(i).getSourceNode();
-            DynamicMDPState srcState = (DynamicMDPState) srcNode.get("stateClass");
-            VisualItem item = vis.getVisualItem("graph.edges", edges.get(i));
-            GMEAction thisAction = (GMEAction) item.get("CriteriaAction");
-            item.set("reward", thisController.getReward(thisAction, srcState));
-            edgeItems.add(item);//this is used by dataDisplay later when we make buttons(When user clicks the button we want it to be 
-                                //as if the user actually clicked that edge).
-                                
-        }
         //give every node black stroke
         Iterator allNodes = graph.nodes();
         while(allNodes.hasNext())
@@ -518,28 +473,11 @@ public final class Visualizer
             item.setStroke(new BasicStroke(0));
             if(item.getBoolean("CurrentState")) vis.getVisualItem("graph.nodes", tempNode).setStroke(new BasicStroke(10));
         }
-        
-        
-//        for(int i = 0; i < graph.getEdgeCount(); i++)
-//        {
-//            vis.getVisualItem("graph.edges", graph.getEdge(i)).setSize(5);
-//            vis.getVisualItem("graph.nodes", graph.getNode(i)).setSize(500);
-//        }
-        
     }
-    /**
-     * create nodes for each state
-     */
-    private void setUpNodes(boolean init) throws FinalStateException
-    {      
-        nodeMap = new HashMap<>();
-        if(init)    graph.addRoot().set("CurrentState", true); //this adds the root and sets a needed column
-        else      graph.addRoot();
-        
-        
-        Node n = graph.getRoot();
-        
-        //optimal path loop
+    
+    
+    private void setUpOptimalNodes(Node n) throws FinalStateException
+    {
         for(int i = 0; i < tree.statesTaken.size(); i++)
         {
             n.set("type", "node");
@@ -565,8 +503,57 @@ public final class Visualizer
                 edge.set("ActionName", tree.actionsTaken.get(i).getName());
                 edge.set("reward", thisController.getReward(tree.actionsTaken.get(i), tree.statesTaken.get(i)));
             }
-            
         }
+    }
+    
+    private int setEdgesBetweenPreExistingNodes(Node n, int i , int j)
+    {
+
+        DynamicMDPState prevState;
+        while(j < visibleStates.get(i).size()-1 && nodeMap.get(visibleStates.get(i).get(j+1)) != null && nodeMap.get(visibleStates.get(i).get(j)) != null)
+        {
+            prevState = visibleStates.get(i).get(j);
+            Edge e = graph.getEdge(nodeMap.get(visibleStates.get(i).get(j)), nodeMap.get(visibleStates.get(i).get(j+1))); //if e is not null it means this case has been handled before
+                                                     //although this case seems rare it happens sometimes
+            if(e == null && prevState != null)
+            {   
+                e = graph.addEdge(nodeMap.get(visibleStates.get(i).get(j)), nodeMap.get(visibleStates.get(i).get(j+1)));
+                e.set("srcState", prevState);//set the edges source state
+                e.set("resultState", visibleStates.get(i).get(j+1));//and target state
+                e.set("action", visibleActions.get(i).get(j).getName());
+                e.set("CriteriaAction", visibleActions.get(i).get(j));
+                e.set("ActionName", visibleActions.get(i).get(j).getName());
+                e.set("reward", thisController.getReward(visibleActions.get(i).get(j), visibleStates.get(i).get(j)));   
+            }
+            j++;  //since we handled a state go ahead and increment j
+                            //I would have liked to have used continue but since
+                              //we are looping over the graph and not visibleStates
+                              //continue would not have the desired effect
+                              //the following if statement handles cases where j goes over 
+                              //visibleState.size()
+            if(j >= visibleStates.get(i).size())//if we go over break
+            {
+                return -1;
+            }
+            n = nodeMap.get(visibleStates.get(i).get(j));
+        }
+        if(j > visibleStates.get(i).size()) return -1;
+        return j;
+    }
+    
+    /**
+     * create nodes for each state
+     */
+    private void setUpNodes(boolean init) throws FinalStateException
+    {      
+        nodeMap = new HashMap<>();
+        if(init)    graph.addRoot().set("CurrentState", true); //this adds the root and sets a needed column
+        else      graph.addRoot();
+        
+        Node n = graph.getRoot();
+        
+        setUpOptimalNodes(n);
+
         //end optimal path loop
         
         
@@ -580,114 +567,31 @@ public final class Visualizer
             DynamicMDPState prevState = null;
             int numOfNodes = visibleStates.get(i).size();
             for(int j = 0; j < numOfNodes; j++)
-            { 
-                //this prevents "hidden" paths from being produced
-                //the break stops the production of the path and moves to the next path
-//                if(j > 0 && temporaryHiddenStates.get(visibleStates.get(i).get(j+1)) != null)
-//                {
-//                    System.out.println("hit the thing exiting...");
-//                    break;
-//                }
-                
-                
-                boolean flag = false; //flag is whether a state in visible states already has a node dedicated
-                                      //to representing that state.  This helps to make edges point to that
-                                      //node rather than creating another node for the same state
-                                      
-                                      
-                
-                Iterator nodeIterator = graph.nodes();
-                while(j < visibleStates.get(i).size()-1 && nodeMap.get(visibleStates.get(i).get(j+1)) != null && nodeMap.get(visibleStates.get(i).get(j)) != null)
-                {
-//                    Node test = (Node) nodeIterator.next();
-//                    DynamicMDPState testForState = (DynamicMDPState) test.get("stateClass");
-//                    if(testForState.equals(visibleStates.get(i).get(j))) //if its found set flag to true
-//                    {
-//                        flag = true; //copy was found
-//                    }
-//                    while(j < visibleStates.get(i).size()-1 && nodeMap.get(visibleStates.get(i).get(j+1)) != null)//handle the copy
-                    {
-                        prevState = visibleStates.get(i).get(j);
-                        Edge e = graph.getEdge(nodeMap.get(visibleStates.get(i).get(j)), nodeMap.get(visibleStates.get(i).get(j+1))); //if e is not null it means this case has been handled before
-                                                         //although this case seems rare it happens sometimes
-                        if(e == null && prevState != null)
-                        {
-                            boolean add = true; //this flag is used to determine whether the state can be added based
-                                                //on if that edge has been hidden by the user
-                            
-                            //the below loop just checks to make sure we are not adding an edge that the user has hidden
-//                            for(int a = 0; a < temporaryHiddentStateNodes.size(); a++)
-                            {
-//                                if(temporaryHiddentStateNodes.containsValue(prevState)
-//                                        && temporaryHiddentStateNodes.get(prevState).connections.get(0).action.equals(visibleActions.get(i).get(j-1)))
-//                                {
-//                                    add = false;
-//                                }
-                            }
-                            if(add)
-                            {
-                                e = graph.addEdge(nodeMap.get(visibleStates.get(i).get(j)), nodeMap.get(visibleStates.get(i).get(j+1)));
-                                e.set("srcState", prevState);//set the edges source state
-                                e.set("resultState", visibleStates.get(i).get(j+1));//and target state
-                                e.set("action", visibleActions.get(i).get(j).getName());
-                                e.set("CriteriaAction", visibleActions.get(i).get(j));
-                                e.set("ActionName", visibleActions.get(i).get(j).getName());
-                                e.set("reward", thisController.getReward(visibleActions.get(i).get(j), visibleStates.get(i).get(j)));
-                            }
-                        }
-                        flag = false;
-                        j++;  //since we handled a state go ahead and increment j
-                              //I would have liked to have used continue but since
-                              //we are looping over the graph and not visibleStates
-                              //continue would not have the desired effect
-                              //the following if statement handles cases where j goes over 
-                              //visibleState.size()
-                        if(j >= visibleStates.get(i).size())//if we go over break
-                        {
-                            break;
-                        }
-
-                        prevState = visibleStates.get(i).get(j);
-                        n = nodeMap.get(visibleStates.get(i).get(j));
-                        nodeIterator = graph.nodes(); //start the iteration again to check the WHOLE graph for the next state
-                    }
-                }
-                //another checker in case j gets incremented to much
-                if(j >= visibleStates.get(i).size())
-                        break;
-                
-                //if this state was hidden stop here and just go to the next j
-//                if(j > 0 && temporaryHiddenStates.get(visibleStates.get(i).get(j+1)) != null)
-//                {
-//                    break;
-//                }
+            {   
+                int newJ = setEdgesBetweenPreExistingNodes(n, i, j);
+                if(newJ < 0) continue;
+                j = newJ;
+                n = nodeMap.get(visibleStates.get(i).get(j));
                 
                 
 
 
-                    boolean add = true; //this checks for indiv edges(such as that between a non-optimal node
+                boolean add = true; //this checks for indiv edges(such as that between a non-optimal node
                                         //to an optimal one where if hide branch was used it would have no node
                                         //to hide but just a single edge.  This is the fix for that
-//                    for(int a = 0; a < temporaryHiddentStateNodes.size(); a++)
-                    {
-//                        if(temporaryHiddentStateNodes.containsKey(prevState) 
-//                            && temporaryHiddentStateNodes.get(prevState).connections.get(visibleActions.get(i).get(j)) != null)
-//                        {
-//                            add = false;
-//                        }
-                        if( j < visibleStates.get(i).size() - 1 && temporaryHiddenStates.get(visibleStates.get(i).get(j+1)) != null)
-                        {
-                            add = false;
-                        }
-                        else if(temporaryHiddenStates.get(visibleStates.get(i).get(j)) != null)
-                        {
-                            add = false;
-                        }
+                if( !(j < visibleStates.get(i).size() - 1))
+                {
+                    continue;
+                }
+                else if(temporaryHiddenStates.get(visibleStates.get(i).get(j + 1)) != null)
+                {
+                    add = false;
+                }
                                 
-                    }
+                    
 //                n = nodeMap.get(visibleStates.get(i).get(j));
                 Node temp = n; //temp keeps up with n's last node value
-                if(add && j < visibleStates.get(i).size() - 1) //if this is the first or is supposed to be added then do add
+                if(add) //if this is the first or is supposed to be added then do add
                 {
                     n = graph.addChild(n);
                 }
@@ -696,18 +600,16 @@ public final class Visualizer
                     break;
                 }
                 
-                if(j < visibleStates.get(i).size() - 1)
-                {
-                    Edge edge = graph.getEdge(temp, n);
-                    edge.set("srcState", visibleStates.get(i).get(j));//set the edges source state
-                    edge.set("resultState", visibleStates.get(i).get(j+1));//and target state
-                    edge.set("action", visibleActions.get(i).get(j).getName());
-                    edge.set("CriteriaAction", visibleActions.get(i).get(j));
-                    edge.set("ActionName", visibleActions.get(i).get(j).getName());
-                    edge.set("reward", thisController.getReward(visibleActions.get(i).get(j), visibleStates.get(i).get(j)));
-                    nodeMap.put(visibleStates.get(i).get(j+1), n);
-                }
+                //handle the edge between the prev node and the new just added node
+                Edge edge = graph.getEdge(temp, n);
+                edge.set("srcState", visibleStates.get(i).get(j));//set the edges source state
+                edge.set("resultState", visibleStates.get(i).get(j+1));//and target state
+                edge.set("action", visibleActions.get(i).get(j).getName());
+                edge.set("CriteriaAction", visibleActions.get(i).get(j));
+                edge.set("ActionName", visibleActions.get(i).get(j).getName());
+                edge.set("reward", thisController.getReward(visibleActions.get(i).get(j), visibleStates.get(i).get(j)));
                 
+                //set various info about this new added node
                 n.set("type", "node");
                 n.set("state", thisController.getStateString(visibleStates.get(i).get(j+1))); 
                 n.set("stateClass", visibleStates.get(i).get(j+1));  
@@ -715,7 +617,8 @@ public final class Visualizer
                 double stateValueFunction = thisController.getV(index, visibleStates.get(i).get(j+1));
                 double finalStateValueFunction = (double) Math.round(stateValueFunction * 100000) / 100000; //the math.round goes to 5 places(up to the decimal point)
                 n.set("StateReward", finalStateValueFunction);
-                
+                //put the new node in our big hashMap
+                nodeMap.put(visibleStates.get(i).get(j+1), n);
                 
                 
 
@@ -790,7 +693,6 @@ public final class Visualizer
         if(tree.statesTaken.contains(cs.thisState.s)) return; //if we are in a purple node the optimal path can be taken
         List<DynamicMDPState> subOptimalPath = cs.convertToStateList();
         
-        int stateCounter = 0;
         int stop = subOptimalPath.size() - 1;
         
         
@@ -826,8 +728,9 @@ public final class Visualizer
             stateValueContainer.addStateValue(thisController.getV(index, src.s));
             actionValueContainer.addAction(src.s, target.s, src.checkIfResultState(target.s));
             
-            
+            if(i == 0) nodeSrc.set("nodeInfo", 1);
             if(!thisController.isTerminal(index, target.s)) nodeTarget.set("nodeInfo", 2); //purple nodes
+            else nodeTarget.set("nodeInfo", 0);
             if(!nodeSrc.equals(nodeTarget)) //if the result state is the same as the src then nothing needs to happen
             {
                 Edge e = graph.getEdge(nodeSrc, nodeTarget); //get the edge between the nodes
@@ -839,6 +742,7 @@ public final class Visualizer
                     edges.add(e); //edges is a list of the edges from initial to target
                 }
             }
+            System.out.println(nodeSrc.get("nodeInfo"));
                         
         }//end of loop
         stateValueContainer.addStateValue(0); //final state has 0 value
@@ -885,6 +789,32 @@ public final class Visualizer
     }
     
     
+    
+    
+    private void handleExpansionComputeState(ComputeState newCompute, Connection connect, DynamicMDPState initState)
+    {
+                            DynamicMDPState nextState = newCompute.prevStates.get(newCompute.prevStates.size() - 1).s;
+                    newCompute.prevStates.remove(newCompute.prevStates.size() - 1);
+                    FinalControlListener.ContainerOfActionAndStateSeqence cont = mouse.getPathFrom(nextState, initState);
+                    if(cont != null)
+                    {
+                        for(int a = 0; a < cont.states.size(); a++)
+                        {
+                            newCompute.prevStates.add(tree.nodes.get(cont.states.get(a)));
+                        }
+                        for(int a = 0; a < cont.actions.size(); a++)
+                        {
+                            newCompute.prevActions.add(cont.actions.get(a));
+                        }
+                    }
+                    
+                    else
+                    {
+                        newCompute.prevStates.add(lastComputeState.thisState);
+                    }
+                    newCompute.prevActions.add(connect.action);
+    }
+    
     /**
      * This is the method that handles adding states by the expand feature
      * @param initState
@@ -897,7 +827,6 @@ public final class Visualizer
         {
             for(int j = 0; j < connect.nodes.size(); j++)
             {
-//                if(dontComputeStates.contains(initState.connections.get(i).states.get(j))) continue;
                 boolean found = false;
                 ComputeState newCompute;
                 ComputeState oldCompute = findInAlreadyComputedStates(connect.nodes.get(j));
@@ -908,7 +837,6 @@ public final class Visualizer
                 
 
                 newCompute = new ComputeState();
-                    
                 for(int a = 0; a < chosenStates.size(); a++)
                 {
                     newCompute.prevStates.add(tree.getNodeForState(chosenStates.get(a)));
@@ -921,34 +849,7 @@ public final class Visualizer
                     
                 if(isExpanding)
                 {
-                    DynamicMDPState nextState = newCompute.prevStates.get(newCompute.prevStates.size() - 1).s;
-                    newCompute.prevStates.remove(newCompute.prevStates.size() - 1);
-                    FinalControlListener.ContainerOfActionAndStateSeqence cont = mouse.getPathFrom(nextState, initState.s);
-                    if(cont != null)
-                    {
-                        for(int a = 0; a < cont.states.size(); a++)
-                        {
-//                            for(int b = 0; b < tree.nodes.size(); b++)
-                            {
-//                                if(tree.nodes.get(b).s.equals(cont.states.get(a)))
-                                {
-                                    newCompute.prevStates.add(tree.nodes.get(cont.states.get(a)));
-//                                    break;
-                                }
-                            }
-                        }
-                        for(int a = 0; a < cont.actions.size(); a++)
-                        {
-//                            System.out.println("it says " + cont.actions.get(a).actionName());
-                            newCompute.prevActions.add(cont.actions.get(a));
-                        }
-                    }
-                    
-                    else
-                    {
-                        newCompute.prevStates.add(lastComputeState.thisState);
-                    }
-                    newCompute.prevActions.add(connect.action);
+                    handleExpansionComputeState(newCompute, connect, initState.s);
                 }
 
                 else
@@ -969,7 +870,6 @@ public final class Visualizer
                 }
                 else
                 {
-//                    newCompute.prevActions.clear();
                     mergeOldComputetoNewCompute(newCompute, oldCompute);
                 }
                 
@@ -1019,17 +919,8 @@ public final class Visualizer
                 //remember if degredation is < 0 it is not set
                 if((totalReward > largestAllowedReward && !alreadyComputed) || this.degredation < 0)
                 {
-                    
-//                    if(!computableStates.contains(newCompute) || 
-//                             && !checkForExistInTree(newCompute.thisState))
-                    {
-                        computableStates.add(newCompute);
-                    }
-//                    if(!oldComputeStates.contains(newCompute))
-                    {
+                        computableStates.add(newCompute);   
                         oldComputeStates.add(newCompute);
-                    }
-                    
                 }
                 else
                 {
