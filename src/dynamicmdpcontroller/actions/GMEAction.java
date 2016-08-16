@@ -177,7 +177,8 @@ public class GMEAction extends DynamicMDPAction {
         Object eval = null;
         try {
             eval = elprocessor.eval(super.preCondition);
-        } catch (Exception e) {
+        } catch (Exception e) 
+        {
             e.printStackTrace();
         }
         boolean ret = Boolean.valueOf(eval.toString());

@@ -43,9 +43,9 @@ public class LocalController {
 
     public LocalController(Location l, double wc, double wt, double gamma) throws Exception {
         this.l = l;
-        this.wc = wc;
-        this.wt = wt;
-        this.gamma = gamma;
+        this.wc = 1;
+        this.wt = 0;
+        this.gamma = .99;
         initialState = init();
         stateAttributes = new HashMap<>();
 

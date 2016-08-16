@@ -72,8 +72,9 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 
     @Override
     public List<GMEAction> getLocalOptimalPathActions(int index, DynamicMDPState d) throws FinalStateException {
-        if (localEpisode[index] == null) {
-//            planFromLocalState(d, index);
+        if (localEpisode[index] == null) 
+        {
+            planFromLocalState(d, index);
             localEpisode[index] = localControllers[index].getEpisode();
         }
         List<Action> actions = localEpisode[index].actionSequence;
@@ -245,7 +246,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 
     @Override
     public List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction a) 
-    {     
+    {
         if(!a.isApplicableInState(s)) return new ArrayList<>(); //required statement ask stefano
         List<StateTransitionProb> tp = a.stateTransitions(s.copy(), a.copy());
         if(tp == null) return new ArrayList();
