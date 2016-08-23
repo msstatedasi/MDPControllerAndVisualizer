@@ -116,4 +116,21 @@ public class ComputeState
             this.ea.stateSequence.add(ds);
         }
     }
+    
+    public boolean checkForLoops()
+    {
+        List<DynamicMDPState> stateList = this.convertToStateList();
+        
+        for(int i = 0; i < stateList.size(); i++)
+        {
+            for(int j = 0; j < stateList.size(); j++)
+            {
+                if(i != j)
+                {
+                    if(stateList.get(i).equals(stateList.get(j))) return true;
+                }
+            }
+        }
+        return false;
+    }
 }

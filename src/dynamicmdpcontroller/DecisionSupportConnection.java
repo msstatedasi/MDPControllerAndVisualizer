@@ -74,9 +74,10 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public List<GMEAction> getLocalOptimalPathActions(int index, DynamicMDPState d) throws FinalStateException {
         if (localEpisode[index] == null) 
         {
-            planFromLocalState(d, index);
+//            planFromLocalState(d, index);
             localEpisode[index] = localControllers[index].getEpisode();
         }
+        if(localEpisode[index] == null) return null;
         List<Action> actions = localEpisode[index].actionSequence;
         List<GMEAction> ret = new ArrayList<>(actions.size());
         for (Action a : actions) {
@@ -89,7 +90,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     @Override
     public List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState s) throws FinalStateException {
         if (globalEpisode == null) {
-            planFromGlobalState(s);
+//            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
         }
         List<Action> actions = globalEpisode.actionSequence;
@@ -103,7 +104,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     @Override
     public List<DynamicMDPState> getGlobalOptimalPath(DynamicMDPState s) throws FinalStateException {
         if (globalEpisode == null) {
-            planFromGlobalState(s);
+//            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
         }
         List<State> states = globalEpisode.stateSequence;
@@ -122,6 +123,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 //            localControllers[index].planFromState(s);
             localEpisode[index] = localControllers[index].getEpisode();
         }
+        if(localEpisode[index] == null) return null;
         DynamicMDPState first = (DynamicMDPState) localEpisode[index].stateSequence.get(0);
         if(first.equals((s)))
         {
@@ -148,7 +150,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     @Override
     public double getGlobalPathReward(DynamicMDPState s) throws FinalStateException {
         if (globalEpisode == null) {
-            planFromGlobalState(s);
+//            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
         }
         List<Double> rewards = globalEpisode.rewardSequence;
@@ -163,7 +165,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public double getLocalPathReward(int index, DynamicMDPState s) throws FinalStateException {
         if (localEpisode[index] == null) 
         {
-            localControllers[index].planFromState(s);
+//            localControllers[index].planFromState(s);
             localEpisode[index] = localControllers[index].getEpisode();
         }
         List<Double> rewards = localEpisode[index].rewardSequence;
@@ -180,7 +182,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
         double reward = 0;
         for(int i = 0; i < actions.size(); i++)
         {
-            reward += this.localControllers[0].getDomainGen().getRf().reward(states.get(i), actions.get(i), states.get(i));
+            reward += this.localControllers[index].getDomainGen().getRf().reward(states.get(i), actions.get(i), states.get(i));
         }
         return reward;
         
@@ -190,7 +192,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public double getLocalStateValue(int index, DynamicMDPState s) throws FinalStateException {
         if (localEpisode[index] == null) 
         {
-            localControllers[index].planFromState(s);
+//            localControllers[index].planFromState(s);
             localEpisode[index] = localControllers[index].getEpisode();
         }
         if(localControllers[index].getPlanner().value(s) != 0) return localControllers[index].getPlanner().value(s); //ask stefano here
@@ -201,7 +203,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public double getGlobalStateValue(DynamicMDPState s) throws FinalStateException {
         if (globalEpisode == null) 
         {
-            planFromGlobalState(s);
+//            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
         }
         return globalController.getPlanner().value(s);
@@ -214,7 +216,8 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     }
 
     @Override
-    public List<DynamicMDPState> getAllStates(int index) {
+    public List<DynamicMDPState> getAllStates(int index) 
+    {
         List<DynamicMDPState> allStates = new ArrayList();
         List<DynamicMDPState> toCompute = new ArrayList();
         toCompute.add(this.getInitalState(index));
@@ -222,11 +225,12 @@ public class DecisionSupportConnection implements DecisionSupportInterface
         
         for(int i = 0; i < toCompute.size(); i++)
         {
-            System.out.println(toCompute.size());
+//            System.out.println(toCompute.size());
             for(int j = 0; j < this.getAllLocalDefinedActions(index).size(); j++)
             {
                 
                 GMEAction a = (GMEAction) this.getAllLocalDefinedActions(index).get(j);
+                
                 
                 DynamicMDPState s = toCompute.get(i);
                 List<DynamicMDPState> resultStates = this.getResultingStates(s.copy(), a);
@@ -255,7 +259,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
         for(int i = 0; i < tp.size(); i++)
         {
             resultingStates.add((DynamicMDPState) tp.get(i).s);
-            if(resultingStates.get(i).equals(s)) System.out.println("action " + a.actionName() + " does same state");
+//            if(resultingStates.get(i).equals(s)) System.out.println("action " + a.actionName() + " does same state");
         }
 //        System.out.println("return with " + resultingStates.size() + "    " + resultingStates.get(0).equals(s));
         return resultingStates;

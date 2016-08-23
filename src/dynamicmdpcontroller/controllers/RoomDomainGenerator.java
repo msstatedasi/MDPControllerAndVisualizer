@@ -50,8 +50,8 @@ public class RoomDomainGenerator {
         domain.addActionType(actionType);
         sm = new StateModel();
         rf = new Reward();
-//        rf.setWc(wc);
-//        rf.setWt(wt);
+        rf.setWc(wc);
+        rf.setWt(wt);
         this.room = room;
         tf = room.getLocalGoal();
         rf.setTermination(tf);

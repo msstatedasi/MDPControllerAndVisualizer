@@ -64,12 +64,14 @@ public class FinalControlListener extends ControlAdapter implements Control {
     NodeItem currentState;
     
     Visualizer thisVis;
+    int index;
 
     /**
      * All constructor does is initialize variables
      */
-    public FinalControlListener(MyController c) //rewardfunction was here
+    public FinalControlListener(int index, MyController c) //rewardfunction was here
     {
+        this.index = index;
         highlightedNodes = new ArrayList<>();
         chosenAVC = new ActionValueContainer(c);
         chosenSVC = new StateValueContainer(chosenAVC);
@@ -309,7 +311,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
                 
                 currentState = edge.getTargetItem();
                 
-                chosenAVC.addAction((DynamicMDPState) edge.getSourceNode().get("stateClass"), (DynamicMDPState) edge.getTargetNode().get("stateClass"), clickedAction);
+                chosenAVC.addAction(index, (DynamicMDPState) edge.getSourceNode().get("stateClass"), (DynamicMDPState) edge.getTargetNode().get("stateClass"), clickedAction);
                 double reward = (double) edge.getTargetNode().get("StateReward");
                 chosenSVC.addStateValue(reward);
                 chart.update();

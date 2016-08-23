@@ -16,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import visual.DataDisplay;
 import visual.Visualizer;
 
 /**
@@ -39,7 +41,7 @@ public class Manager {
     List<GMEAction> takenActions;//list of all the actions taken
     Visualizer MDPvisual;//an instance of the visualizer
     double degredation;
-    
+    DataDisplay dd;
 
     /**
      * This function is only called by {@link BurlapVisualizer.TestProject} when the
@@ -92,7 +94,18 @@ public class Manager {
         frame.pack();
         frame.setVisible(true);
         
-
+        List<String> allStateAttribs = new ArrayList();
+        
+        for(int i = 0; i < c.getNumOfLocalControllers(); i++)
+        {
+            for(int j = 0; j < c.getAllStateAttributes(i).size(); j++)
+            {
+                allStateAttribs.add(c.getAllStateAttributes(i).get(j));
+            }
+        }
+        
+        
+        dd = new DataDisplay(allStateAttribs, c);
     }
     
     public class buttonAction implements ActionListener
@@ -132,6 +145,11 @@ public class Manager {
                 takenActions = dsc.getLocalOptimalPathActions(index, dsc.getInitalState(index));//the actions taken from intial state to target state
                 takenStates = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));//the states taken from intial state to target state
                 
+                if(takenStates == null)
+                {
+                    return;
+                }
+                
                 List<GMEAction> allPosActions = dsc.getAllLocalDefinedActions(index);//this is a list of every action that the MDP has defined
                 
                 
@@ -143,7 +161,7 @@ public class Manager {
                 tree.setStatesTaken(takenStates);
                 tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
                 
-                MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation, index);//the visualizer takes over from here
+                MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation, index, dd);//the visualizer takes over from here
                 
             } catch (FinalStateException | IOException | ParseException ex) {
                 Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);

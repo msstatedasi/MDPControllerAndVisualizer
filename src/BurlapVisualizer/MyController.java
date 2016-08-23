@@ -107,7 +107,7 @@ public class MyController extends DynamicMDPController {
     {
         List<DynamicMDPState> states = dsc.getAllStates(index); //get all possible states
 
-        List<GMEAction> allListActions = dsc.getAllLocalDefinedActions(0);
+        List<GMEAction> allListActions = dsc.getAllLocalDefinedActions(index);
         Hashtable<String, GMEAction> map = new Hashtable<>();
         for(int a = 0; a < allListActions.size(); a++)
         {
@@ -119,7 +119,7 @@ public class MyController extends DynamicMDPController {
             StateNode current = new StateNode();//eventually put the state into here
             current.setNodeState(s);           //set the node root to state(now to fill in the actions
             
-            List<GMEAction> allActions = dsc.getAllLocalDefinedActions(0);
+            List<GMEAction> allActions = dsc.getAllLocalDefinedActions(index);
 //            try//see below comment about why this try catch block exists
             {
                 //the line below fails if it returns empty list....weird seems like a bug which is also the purpose for the try catch
@@ -233,20 +233,20 @@ public class MyController extends DynamicMDPController {
             return Reward;
         }
         
-        public double getReward(List<GMEAction> acts, List<DynamicMDPState> states) 
+        public double getReward(int index, List<GMEAction> acts, List<DynamicMDPState> states) 
         {
             double sum = 0;
-            sum = dsc.getLocalPathReward(0, acts, states);
+            sum = dsc.getLocalPathReward(index, acts, states);
             return sum;
         }
         
-        public double getReward(GMEAction act, DynamicMDPState state)
+        public double getReward(int index, GMEAction act, DynamicMDPState state)
         {
             List<GMEAction> singleAction = new ArrayList();
             singleAction.add(act);
             List<DynamicMDPState> singleState = new ArrayList();
             singleState.add(state);
-            return this.getReward(singleAction, singleState);
+            return this.getReward(index, singleAction, singleState);
         }
 
     public Hashtable<String, GMEAction> getActionMap(int index) 

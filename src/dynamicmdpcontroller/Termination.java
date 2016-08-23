@@ -64,7 +64,7 @@ public class Termination implements burlap.mdp.core.TerminalFunction, Serializab
     }
     
     public void serialize(String path) throws Exception {
-        FileOutputStream fos = new FileOutputStream("C:/Users/stefano/Dropbox/SBIR-Dec2016/home_automation_scenario/modelobjects/termination.term");
+        FileOutputStream fos = new FileOutputStream("C:/Classes/termination.term");
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(this);
         oos.close();

@@ -48,7 +48,6 @@ public class LocalController {
         this.gamma = .99;
         initialState = init();
         stateAttributes = new HashMap<>();
-
     }
 
     private DynamicMDPState init() throws Exception {

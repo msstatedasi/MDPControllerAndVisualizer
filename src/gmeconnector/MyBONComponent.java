@@ -36,7 +36,9 @@ public class MyBONComponent implements BONComponent {
     }
 
     @Override
-    public void invokeEx(JBuilder builder, JBuilderObject focus, Collection selected, int param) {
+    public void invokeEx(JBuilder builder, JBuilderObject focus, Collection selected, int param) 
+    {
+//        JOptionPane.showMessageDialog(null, "hhhhhhhhhhhhhhhhhh");
         Iterator selectedIterator = selected.iterator();
         ArrayList<Location> locations = new ArrayList<>();
         Termination t = null;
@@ -57,6 +59,7 @@ public class MyBONComponent implements BONComponent {
             try {
                 l.serialize("");
             } catch (Exception ex) {
+//                msg += "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh";
                 msg += ex.toString();
                 msg += ex.getMessage();
             }
@@ -65,6 +68,7 @@ public class MyBONComponent implements BONComponent {
             try {
                 t.serialize("");
             } catch (Exception ex) {
+//                msg+= "heaewafasdfasdfasdfasdf";
                 msg += ex.toString();
                 msg += ex.getMessage();
             }

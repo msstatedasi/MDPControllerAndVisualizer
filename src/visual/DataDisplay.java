@@ -40,7 +40,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import org.apache.commons.lang3.StringUtils;
+//import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -74,7 +74,6 @@ public class DataDisplay implements ItemListener
     boolean ignoreDegredation = false;
     
     MyController myController;
-    List<VisualItem> items;
     FinalControlListener fcl;
     
     String prefix;
@@ -113,14 +112,13 @@ public class DataDisplay implements ItemListener
      * @param takenActionItems the actions(in item form) of the actions taken
      * @param fcl The mouse control listener(used for when user clicks a button)
      */
-    public DataDisplay(StateTree t, List<String> allStateAttribs, MyController controller, List<VisualItem> takenActionItems, FinalControlListener fcl, int index)
+    public DataDisplay(List<String> allStateAttribs, MyController controller)
     {
         this.index = index;
         ignoreDegCheckBox = new JCheckBox("Ignore degredation");
         ignoreDegCheckBox.addItemListener(this);
         
-        prefix = "Network_Server_ServiceGroup_";
-        
+        myController = controller;
         initNodeMap = new HashMap<>();
         actionNodeMap = new HashMap<>();
         resultStateNodeMap = new HashMap<>();
@@ -128,11 +126,19 @@ public class DataDisplay implements ItemListener
         actionTree = new JTree();
         resultStateTree = new JTree();
         
+        List<String> allDefinedActionsEver = new ArrayList();
+        for(int i = 0; i < myController.getNumOfLocalControllers(); i++)
+        {
+            for(int j = 0; j < myController.allDefinedActions(i).size(); j++)
+            {
+                allDefinedActionsEver.add(myController.allDefinedActions(i).get(j));
+            }
+        }
+        
         this.fcl = fcl;
-        items = takenActionItems;
-        tree = t;
+        
         allAttribs = allStateAttribs;
-        myController = controller;
+        
         cost = new JLabel();
         impact = new JLabel();
         time = new JLabel();
@@ -146,7 +152,7 @@ public class DataDisplay implements ItemListener
         JScrollPane stateTreeView = createTree(allStateAttribs, initNodeMap, stateTree, inithtcr, false);
         
         actionhtcr = new HighlightTreeCellRenderer(actionTree.getCellRenderer());
-        JScrollPane actionTreeView = createTree(controller.allDefinedActions(0), actionNodeMap, actionTree, actionhtcr, true);
+        JScrollPane actionTreeView = createTree(allDefinedActionsEver, actionNodeMap, actionTree, actionhtcr, true);
         
         resulthtcr = new HighlightTreeCellRenderer(resultStateTree.getCellRenderer());
         JScrollPane resultStateTreeView = createTree(allStateAttribs, resultStateNodeMap, resultStateTree, resulthtcr, false);
@@ -166,24 +172,29 @@ public class DataDisplay implements ItemListener
         
 
         
-        double[] rewards = controller.computeTotalReward(t.actionsTaken);
-        double reward;
-        for(int i = 0; i < rewards.length; i++)
-        {
-            rewards[i] = (double) Math.round(rewards[i] * 100000) / 100000;
-        }
-        reward = controller.getReward(t.actionsTaken, t.statesTaken);
-        reward = (double) Math.round(reward * 100000) / 100000;
-        
-        cost.setText("Cost: " + String.valueOf(rewards[0]));
-//        impact.setText("Impact: " + String.valueOf(rewards[1]));
-        time.setText("Time: " + String.valueOf(rewards[1]));
-        rewardTotal.setText("Reward: " + String.valueOf(reward));
-        
+
         this.setUpCharts("no action", null, null);
-
-                
-
+    }
+    
+    public void giveNeededInfo(StateTree t, FinalControlListener fcl, int index)
+    {
+        tree = t;
+        this.fcl = fcl;
+        this.index = index;
+        
+//        double[] rewards = controller.computeTotalReward(t.actionsTaken);
+//        double reward;
+//        for(int i = 0; i < rewards.length; i++)
+//        {
+//            rewards[i] = (double) Math.round(rewards[i] * 100000) / 100000;
+//        }
+//        reward = controller.getReward(index, t.actionsTaken, t.statesTaken);
+//        reward = (double) Math.round(reward * 100000) / 100000;
+//        
+//        cost.setText("Cost: " + String.valueOf(rewards[0]));
+//        time.setText("Time: " + String.valueOf(rewards[1]));
+//        rewardTotal.setText("Reward: " + String.valueOf(reward));
+//        
     }
     
     public void updateTree(List<String> list, List<Object> values, HashMap<String, DefaultMutableTreeNode> map, JTree tree,
@@ -191,31 +202,37 @@ public class DataDisplay implements ItemListener
     {
         htcrUpdate.q = new ArrayList();
         TreePath path = null;
-        for(int i = 0; i < list.size(); i++)
+        for(int i = 0; i < values.size(); i++)
         {
+            if(values.get(i) == null) continue;
+            String fullName = "";
             DefaultMutableTreeNode node = map.get(list.get(i));
+            DefaultMutableTreeNode temp = node;
+            while(temp.getUserObject() != "root")
+            {
+                if(fullName == "") fullName = (String) temp.getUserObject();
+                else fullName = temp.getUserObject() + "_" + fullName;
+                temp = (DefaultMutableTreeNode) temp.getParent();
+            }
             String orginalName = (String) node.getUserObject().toString().split(" = ")[0];
             String modifiedName = orginalName + " = " + values.get(i).toString();
             node.setUserObject(modifiedName);
             path = new TreePath(node.getPath());
             path = path.getParentPath();
-            if(toHighlight != null && toHighlight.contains(prefix + orginalName))
+            tree.expandPath(path);
+            if(toHighlight != null && toHighlight.contains(fullName))
             {
-                htcrUpdate.q.add(orginalName);
+                htcrUpdate.q.add(fullName);
+                
             }
         }
         tree.updateUI();
-        if(path != null)
-        {
-            tree.expandPath(path);
-        }
+
     }
     
     public void updateTree(String clickedAction, HighlightTreeCellRenderer htcrUpdate)
     {
-//        System.out.println(prefix + clickedAction);
-        DefaultMutableTreeNode node = actionNodeMap.get(prefix + clickedAction);
-//        System.out.println(node.getUserObject());
+        DefaultMutableTreeNode node = actionNodeMap.get(clickedAction);
         TreePath path = new TreePath(node.getPath());
         path = path.getParentPath();
         
@@ -252,7 +269,7 @@ public class DataDisplay implements ItemListener
                 boolean found = false;
                 String attrib = list.get(i).split("_")[j];
                 
-                Enumeration enu = top.postorderEnumeration();
+                Enumeration enu = prevFound.postorderEnumeration();
                 while(enu.hasMoreElements())
                 {
                     DefaultMutableTreeNode find = (DefaultMutableTreeNode) enu.nextElement();
@@ -314,7 +331,7 @@ public class DataDisplay implements ItemListener
 //        System.out.println("working on /it");
         clearTree(allAttribs, initNodeMap, stateTree, this.inithtcr);
         clearTree(allAttribs, resultStateNodeMap, resultStateTree, this.actionhtcr);
-        clearTree(myController.allDefinedActions(0), actionNodeMap, actionTree, this.resulthtcr);
+        clearTree(myController.allDefinedActions(index), actionNodeMap, actionTree, this.resulthtcr);
         List<Object> values = new ArrayList<>();
         if(srcState != null)
         {
@@ -338,54 +355,53 @@ public class DataDisplay implements ItemListener
             List<String> difference = this.compareAttributes(srcState, resultState);
             updateTree(allAttribs, values, resultStateNodeMap, resultStateTree, difference, resulthtcr);
         }
-        String singleAction = clickedAction.split("_")[clickedAction.split("_").length-1];
-        if(!clickedAction.equals("no action")) updateTree(singleAction, actionhtcr);
+        if(!clickedAction.equals("no action")) updateTree(clickedAction, actionhtcr);
 
         
-        String wholeMessage = "";
-        wholeMessage += HTMLHeader;
-        wholeMessage += "<head>";
-        wholeMessage += "</head>";
-        wholeMessage += "<body>";
-        wholeMessage += setUpActionChart(clickedAction);
-        wholeMessage += seperator + seperator + seperator;
-        wholeMessage += "</body>";
-        wholeMessage += HTMLTail;       
-        actionTable = new JLabel(wholeMessage);
+//        String wholeMessage = "";
+//        wholeMessage += HTMLHeader;
+//        wholeMessage += "<head>";
+//        wholeMessage += "</head>";
+//        wholeMessage += "<body>";
+//        wholeMessage += setUpActionChart(clickedAction);
+//        wholeMessage += seperator + seperator + seperator;
+//        wholeMessage += "</body>";
+//        wholeMessage += HTMLTail;       
+//        actionTable = new JLabel(wholeMessage);
+//        
+//        List<String> differencesInStates = this.compareAttributes(srcState, resultState); 
+//        
+//        wholeMessage = "";
+//        wholeMessage += HTMLHeader;
+//        wholeMessage += "<head>";
+//        wholeMessage += "</head>";
+//        wholeMessage += "<body>";
+//        wholeMessage += setUpStateChart(srcState, differencesInStates);
+//        wholeMessage += seperator + seperator + seperator;
+//        wholeMessage += "</body>";
+//        wholeMessage += HTMLTail;         
+//        srcTable = new JLabel(wholeMessage);
+//        
+//        wholeMessage = "";
+//        wholeMessage += HTMLHeader;
+//        wholeMessage += "<head>";
+//        wholeMessage += "</head>";
+//        wholeMessage += "<body>";
+//        wholeMessage += setUpStateChart(resultState, differencesInStates);
+//        wholeMessage += seperator + seperator + seperator;
+//        wholeMessage += "</body>";
+//        wholeMessage += HTMLTail;       
+//        resultTable = new JLabel(wholeMessage);
         
-        List<String> differencesInStates = this.compareAttributes(srcState, resultState); 
-        
-        wholeMessage = "";
-        wholeMessage += HTMLHeader;
-        wholeMessage += "<head>";
-        wholeMessage += "</head>";
-        wholeMessage += "<body>";
-        wholeMessage += setUpStateChart(srcState, differencesInStates);
-        wholeMessage += seperator + seperator + seperator;
-        wholeMessage += "</body>";
-        wholeMessage += HTMLTail;         
-        srcTable = new JLabel(wholeMessage);
-        
-        wholeMessage = "";
-        wholeMessage += HTMLHeader;
-        wholeMessage += "<head>";
-        wholeMessage += "</head>";
-        wholeMessage += "<body>";
-        wholeMessage += setUpStateChart(resultState, differencesInStates);
-        wholeMessage += seperator + seperator + seperator;
-        wholeMessage += "</body>";
-        wholeMessage += HTMLTail;       
-        resultTable = new JLabel(wholeMessage);
-        
-        if(frame == null) frame = new JFrame("Visualizer Information");
-        else frame.remove(p);
-        
-        p = new JPanel();
-        
-        list = new JPanel(); 
-        list.add(srcTable);
-        list.add(actionTable);
-        list.add(resultTable);
+//        if(frame == null) frame = new JFrame("Visualizer Information");
+//        else frame.remove(p);
+//        
+//        p = new JPanel();
+//        
+//        list = new JPanel(); 
+//        list.add(srcTable);
+//        list.add(actionTable);
+//        list.add(resultTable);
 
         // create the middle panel components
 //        List<ActionButton> actionButtons = getButtonList();
@@ -403,20 +419,20 @@ public class DataDisplay implements ItemListener
 //                scroll.setPreferredSize(new Dimension(500, 50));
 //        }
 
-        JPanel actionInfo = new JPanel();
-//        actionInfo.add(cost);
-//        actionInfo.add(impact);
-//        actionInfo.add(time);
-//        actionInfo.add(rewardTotal);
-        actionInfo.add(ignoreDegCheckBox);
-        
-
-       p.add(list);
-//       p.add(scroll);
-       p.add(actionInfo);
-
-//       frame.add(p);
-       frame.pack();
+//        JPanel actionInfo = new JPanel();
+////        actionInfo.add(cost);
+////        actionInfo.add(impact);
+////        actionInfo.add(time);
+////        actionInfo.add(rewardTotal);
+//        actionInfo.add(ignoreDegCheckBox);
+//        
+//
+//       p.add(list);
+////       p.add(scroll);
+//       p.add(actionInfo);
+//
+////       frame.add(p);
+//       frame.pack();
 //       frame.setSize(1300, 700);
 //       frame.setVisible(true);
     }
@@ -539,7 +555,9 @@ public class DataDisplay implements ItemListener
         
         for(int i = 0; i < attrNames.size(); i++)
         {
-            if(!myController.getValueForAttribute(s1, attrNames.get(i)).equals(myController.getValueForAttribute(s2, attrNames.get(i)))) //DOES NOT equal(different)
+            Object value1 = myController.getValueForAttribute(s1, attrNames.get(i));
+            Object value2 = myController.getValueForAttribute(s2, attrNames.get(i));
+            if(!value1.equals(value2)) //DOES NOT equal(different)
             {
                 differingValues.add(attrNames.get(i));
             }
@@ -627,7 +645,7 @@ public class DataDisplay implements ItemListener
 //                    System.out.println("if");
                     c.setOpaque(false);
                     c.setForeground(getTextSelectionColor());
-                c.setBackground(Color.BLUE); //getBackgroundSelectionColor());
+                    c.setBackground(Color.BLUE); //getBackgroundSelectionColor());
                 }
                 else
                 {
@@ -640,8 +658,7 @@ public class DataDisplay implements ItemListener
                     for(int i = 0; i < q.size(); i++)
                     {
                         String valueStr = value.toString();
-//                        System.out.println(StringUtils.containsIgnoreCase(q.get(i), valueStr) + "   " + valueStr + "   " + q.get(i));
-                        if(StringUtils.containsIgnoreCase(valueStr, q.get(i)))
+                        if(q.get(i).contains(valueStr.split(" = ")[0]))//if(valueStr.contains(q.get(i)))//if(StringUtils.containsIgnoreCase(valueStr, q.get(i)))
                         {
                             shouldHighlight = true;
                             break;

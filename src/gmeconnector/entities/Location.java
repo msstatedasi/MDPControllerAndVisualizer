@@ -49,7 +49,7 @@ public class Location implements Serializable {
     }
 
     public void serialize(String path) throws Exception {
-        FileOutputStream fos = new FileOutputStream("C:/Users/stefano/Dropbox/SBIR-Dec2016/home_automation_scenario/modelobjects/" + name + ".location");
+        FileOutputStream fos = new FileOutputStream("C:/Classes/" + name + ".location");
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(this);
         oos.close();

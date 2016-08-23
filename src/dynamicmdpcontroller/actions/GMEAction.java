@@ -146,7 +146,8 @@ public class GMEAction extends DynamicMDPAction {
     }
 
     @Override
-    public boolean isApplicableInState(State s) {
+    public boolean isApplicableInState(State s) 
+    {
         if (myAttributes == null || myAttributes.isEmpty()) {
             List<Object> attributeKeys = s.variableKeys();
             for (Object o : attributeKeys) {
