@@ -17,7 +17,8 @@ import java.util.List;
  * 
  * @author Justin Lewis
  */
-public class StateNode {
+public class StateNode 
+{
     public DynamicMDPState s; //current state    
     public Hashtable<String, Connection> connections;//each connection represents one action the string is the action name
     

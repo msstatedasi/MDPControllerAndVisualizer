@@ -6,6 +6,7 @@
 package Tree;
 
 
+import BurlapVisualizer.MyController;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.actions.GMEAction;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class StateTree {
     public StateNode initialNode;         //like initial state but the StateNode version
     public HashMap<DynamicMDPState, StateNode> nodes;           //all nodes in the state space
     public List<GMEAction> allPossibleActions;//every defined action in the MDP
+    private MyController myController;
     
     /**
      * Constructor for StateTree.
@@ -34,8 +36,9 @@ public class StateTree {
      * @param n List of {@link Tree.StateNode} that contains the entire state space
      * @param allPos List of CriteriaAction that contains every defined action
      */
-    public StateTree(DynamicMDPState init, HashMap<DynamicMDPState, StateNode> n, List<GMEAction> allPos)
+    public StateTree(DynamicMDPState init, HashMap<DynamicMDPState, StateNode> n, List<GMEAction> allPos, MyController controller)
     {
+        myController = controller;
         allPossibleActions = allPos;
         initialState = init;
         nodes = n;
@@ -56,7 +59,10 @@ public class StateTree {
         return nodes.get(s);
     }
     
-
+    public void fillStateNodeConnections(StateNode sn)
+    {
+        
+    }
     /**
      * Set the actions that were taken from initial state to the final state
      * @param t List of CriteriaAction

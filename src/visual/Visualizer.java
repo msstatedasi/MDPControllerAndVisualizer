@@ -1072,7 +1072,7 @@ public final class Visualizer
             {
                 inEA = true;
                 index = i;
-                subIndex = testState.ea.stateSequence.indexOf(s.s) + 1;
+                subIndex = testState.ea.stateSequence.indexOf( (State) s.s) + 1;
                 break;
             }
         }
