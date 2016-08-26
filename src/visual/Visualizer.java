@@ -52,6 +52,7 @@ import dynamicmdpcontroller.actions.GMEAction;
 import dynamicmdpcontroller.controllers.FinalStateException;
 import java.awt.BasicStroke;
 import java.awt.geom.Point2D;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -508,9 +509,6 @@ public final class Visualizer
                 stateValueContainer.addStateValue(thisController.getV(index, tree.statesTaken.get(i)));
                 actionValueContainer.addAction(index, tree.statesTaken.get(i), tree.statesTaken.get(i+1), tree.actionsTaken.get(i));
             }
-            
-            
-            
         }
     }
     
@@ -755,44 +753,44 @@ public final class Visualizer
     }
     
     //below function was an early attempt at looking at state tree
-    private void generateComputeStates(ComputeState prevState) throws FinalStateException
-    {
-        for(int i = 0; i < prevState.thisState.connections.size(); i++)
-        {
-            for(int j = 0; j < prevState.thisState.connections.get(i).nodes.size(); j++)
-            {
-                StateNode nextNode = findInTree(prevState.thisState.connections.get(i).nodes.get(0).s);
-                ComputeState nextState = new ComputeState();
-                for(int k = 0; k < prevState.prevStates.size(); k++)
-                {
-                    nextState.prevStates.add(prevState.prevStates.get(k));
-                }
-                for(int k = 0; k < prevState.prevActions.size(); k++)
-                {
-                    nextState.prevActions.add(prevState.prevActions.get(k));
-                }
-                boolean shouldAdd = true;
-                nextState.thisState = nextNode;
-                for(int k = 0; k < computableStates.size(); k++)
-                {
-                    if(computableStates.get(k).thisState.equals(nextState.thisState))
-                    {
-                        shouldAdd = false;
-                    }
-                }
-                nextState.prevStates.add(prevState.thisState);
-
-                nextState.prevActions.add(prevState.thisState.connections.get(i).action);
-                if(shouldAdd)
-                {
-                    this.computableStates.add(nextState);
-                }
-                nextState.ea = thisController.getOptimalPathFrom(0, nextState.thisState.s);
-                generateComputeStates(nextState);
-            }
-        }
-        
-    }
+//    private void generateComputeStates(ComputeState prevState) throws FinalStateException
+//    {
+//        for(int i = 0; i < prevState.thisState.connections.size(); i++)
+//        {
+//            for(int j = 0; j < prevState.thisState.connections.get(i).nodes.size(); j++)
+//            {
+//                StateNode nextNode = findInTree(prevState.thisState.connections.get(i).nodes.get(0).s);
+//                ComputeState nextState = new ComputeState();
+//                for(int k = 0; k < prevState.prevStates.size(); k++)
+//                {
+//                    nextState.prevStates.add(prevState.prevStates.get(k));
+//                }
+//                for(int k = 0; k < prevState.prevActions.size(); k++)
+//                {
+//                    nextState.prevActions.add(prevState.prevActions.get(k));
+//                }
+//                boolean shouldAdd = true;
+//                nextState.thisState = nextNode;
+//                for(int k = 0; k < computableStates.size(); k++)
+//                {
+//                    if(computableStates.get(k).thisState.equals(nextState.thisState))
+//                    {
+//                        shouldAdd = false;
+//                    }
+//                }
+//                nextState.prevStates.add(prevState.thisState);
+//
+//                nextState.prevActions.add(prevState.thisState.connections.get(i).action);
+//                if(shouldAdd)
+//                {
+//                    this.computableStates.add(nextState);
+//                }
+//                nextState.ea = thisController.getOptimalPathFrom(0, nextState.thisState.s);
+//                generateComputeStates(nextState);
+//            }
+//        }
+//        
+//    }
     
     
     
@@ -829,7 +827,8 @@ public final class Visualizer
      */
     public void addComputeState(StateNode initState, GMEAction prevAction, DynamicMDPState prevState, boolean isExpanding) throws FinalStateException
     {   
-        for(Connection connect : initState.connections.values())
+        Collection<Connection> stateConnections = initState.getConnections(thisController, tree, index);
+        for(Connection connect : initState.getConnections(thisController, tree, index))
         {
             for(int j = 0; j < connect.nodes.size(); j++)
             {
@@ -915,13 +914,13 @@ public final class Visualizer
                 boolean alreadyComputed = false;
                 
                 List<DynamicMDPState> tempList = newCompute.convertToStateList();
-                for(int a = 0; a < tempList.size(); a++)
-                {
-                    if(dontComputeStates.get(tempList.get(a)) != null)
-                    {
-                        alreadyComputed = true;
-                    }
-                }
+//                for(int a = 0; a < tempList.size(); a++)
+//                {
+//                    if(dontComputeStates.get(tempList.get(a)) != null)
+//                    {
+//                        alreadyComputed = true;
+//                    }
+//                }
                 //remember if degredation is < 0 it is not set
                 if(((totalReward > largestAllowedReward && !alreadyComputed) || this.degredation < 0) && !newCompute.checkForDuplicates())
                 {
@@ -1062,13 +1061,14 @@ public final class Visualizer
         
         for(int i = 0; i < oldComputeStates.size(); i++)
         {
+            State state = s.s;
             ComputeState testState = oldComputeStates.get(i);
             if(testState.thisState.equals(s))
             {
                 return testState;
             }
             
-            else if(testState.ea.stateSequence.contains( (State) s.s))
+            else if(testState.ea.stateSequence.contains(state))
             {
                 inEA = true;
                 index = i;

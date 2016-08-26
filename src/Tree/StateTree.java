@@ -28,7 +28,6 @@ public class StateTree {
     public StateNode initialNode;         //like initial state but the StateNode version
     public HashMap<DynamicMDPState, StateNode> nodes;           //all nodes in the state space
     public List<GMEAction> allPossibleActions;//every defined action in the MDP
-    private MyController myController;
     
     /**
      * Constructor for StateTree.
@@ -36,12 +35,13 @@ public class StateTree {
      * @param n List of {@link Tree.StateNode} that contains the entire state space
      * @param allPos List of CriteriaAction that contains every defined action
      */
-    public StateTree(DynamicMDPState init, HashMap<DynamicMDPState, StateNode> n, List<GMEAction> allPos, MyController controller)
+    public StateTree(DynamicMDPState init, HashMap<DynamicMDPState, StateNode> n, List<GMEAction> allPos)
     {
-        myController = controller;
+        nodes =  new HashMap<>();
         allPossibleActions = allPos;
         initialState = init;
-        nodes = n;
+        this.initialNode = this.getNodeForState(init);
+        
         stateNodesTaken = new ArrayList();
     }
     
@@ -56,13 +56,15 @@ public class StateTree {
     
     public StateNode getNodeForState(DynamicMDPState s)
     {
+        if(nodes.get(s) == null)
+        {
+            StateNode sn = new StateNode();
+            sn.s = s;
+            nodes.put(s, sn);
+        }
         return nodes.get(s);
     }
     
-    public void fillStateNodeConnections(StateNode sn)
-    {
-        
-    }
     /**
      * Set the actions that were taken from initial state to the final state
      * @param t List of CriteriaAction
@@ -79,6 +81,11 @@ public class StateTree {
     public void setStatesTaken(List<DynamicMDPState> s)
     {
         statesTaken = s;
+        for(int i = 0; i < s.size(); i++)
+        {
+            DynamicMDPState ds = s.get(i);
+            this.stateNodesTaken.add(this.getNodeForState(ds)); //this also adds to nodes
+        }
     }
     
  

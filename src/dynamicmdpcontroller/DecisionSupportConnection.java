@@ -299,6 +299,6 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     @Override
     public String getNameOfController(int index) 
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose 
+        return localControllers[index].getDomainGen().getActions().get(0).actionName().split("_")[0];
     }
 }

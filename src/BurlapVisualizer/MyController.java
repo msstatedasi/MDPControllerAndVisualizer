@@ -63,8 +63,17 @@ public class MyController extends DynamicMDPController {
     {
         return dsc.getNumOfLocalControllers();
     }
-
     
+    public List<String> getAllControllerNames(int numOfControllers)
+    {
+        List<String> controllerNames = new ArrayList();
+        for(int i =0; i < numOfControllers; i++)
+        {
+            controllerNames.add(dsc.getNameOfController(i));
+        }
+        return controllerNames;
+    }
+
     /**
      * This basically actions as a getter function to grab the state Sequence.
      * @return List of states taken to get to the target state 
@@ -185,7 +194,7 @@ public class MyController extends DynamicMDPController {
      * @param act This action that is being applied to @param s
      * @return A list of the possible result states
      */
-    private List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction act)
+    public List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction act)
     {
         return dsc.getResultingStates(s, act);
     }

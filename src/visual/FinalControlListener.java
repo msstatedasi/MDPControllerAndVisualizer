@@ -467,7 +467,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
         newHiddenStateNode.s = (DynamicMDPState) e.getSourceNode().get("stateClass");
         toBeRemoved.action = (GMEAction) e.get("CriteriaAction");
         toBeRemoved.states.add((DynamicMDPState) e.getTargetNode().get("stateClass"));
-        newHiddenStateNode.connections.put(toBeRemoved.action.actionName(), toBeRemoved);
+//        newHiddenStateNode.connections.put(toBeRemoved.action.actionName(), toBeRemoved);
         thisVis.temporaryHiddentStateNodes.put(newHiddenStateNode.s, newHiddenStateNode);
         
         hideNodes(removeNode, e.getSourceNode());

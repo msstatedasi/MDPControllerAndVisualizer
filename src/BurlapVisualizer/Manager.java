@@ -42,6 +42,7 @@ public class Manager {
     Visualizer MDPvisual;//an instance of the visualizer
     double degredation;
     DataDisplay dd;
+    List<String> controllerNames;
 
     /**
      * This function is only called by {@link BurlapVisualizer.TestProject} when the
@@ -80,12 +81,13 @@ public class Manager {
         c = new MyController(cost, time, gamma);//this sets up and solves the MDP solution
         
         int numOfControllers = c.getNumOfLocalControllers();
+        controllerNames = c.getAllControllerNames(numOfControllers);
         JPanel panel = new JPanel(new GridLayout(0, 3));
         
-        for(int i = 0; i < numOfControllers; i++)
+        for(String text : controllerNames)
         {
             JButton controllerButton = new JButton();
-            controllerButton.setText("Local Controller " + Integer.toString(i));
+            controllerButton.setText(text);
             controllerButton.addActionListener(new buttonAction(controllerButton));
             panel.add(controllerButton);
         }
@@ -125,7 +127,8 @@ public class Manager {
                 this.button.setEnabled(false);
                 int length = e.getActionCommand().split(" ").length;
                 System.out.println(e.getActionCommand().split(" ")[length - 1]);
-                int index = Integer.parseInt(e.getActionCommand().split(" ")[length - 1]);
+                int index = controllerNames.indexOf(e.getActionCommand());
+//                int index = Integer.parseInt(e.getActionCommand().split(" ")[length - 1]);
                 
                 
                 
@@ -136,7 +139,7 @@ public class Manager {
                 List<String> allAttribs = c.getAllStateAttributes(index);
                 
                 
-                nodes = c.getEntireStateSpaceAndConnections(index);//nodes is a list that contains trees with a height of at most 2.
+//                nodes = c.getEntireStateSpaceAndConnections(index);//nodes is a list that contains trees with a height of at most 2.
                 //for more info about what c.getEntireStateSpaceAndConnections() does look
                 //at the JavaDoc
                 
@@ -159,7 +162,7 @@ public class Manager {
                 StateTree tree = new StateTree(dsc.getInitalState(index), nodes, allPosActions);
                 tree.setTakenActions(takenActions);
                 tree.setStatesTaken(takenStates);
-                tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
+//                tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
                 
                 MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation, index, dd);//the visualizer takes over from here
                 

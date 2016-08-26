@@ -5,10 +5,12 @@
  */
 package Tree;
 
+import BurlapVisualizer.MyController;
 import dynamicmdpcontroller.DecisionSupportConnection;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.actions.GMEAction;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -20,7 +22,7 @@ import java.util.List;
 public class StateNode 
 {
     public DynamicMDPState s; //current state    
-    public Hashtable<String, Connection> connections;//each connection represents one action the string is the action name
+    private Hashtable<String, Connection> connections;//each connection represents one action the string is the action name
     
     
     public StateNode()
@@ -33,6 +35,40 @@ public class StateNode
      * This function is just a setter for this instance's state
      * @param s the state to make the root state of this StateNode
      */
+    
+    public void setConnection(MyController c, StateTree t, int index)
+    {
+        if(connections == null) connections = new Hashtable<>();
+        
+        Hashtable<String, GMEAction> actionMap = c.getActionMap(index);
+        List<String> allDefinedActions = c.allDefinedActions(index);
+        
+        for(int i = 0; i < allDefinedActions.size(); i++)
+        {
+            List<DynamicMDPState> resultStates = c.getResultingStates(s, actionMap.get(allDefinedActions.get(i)));
+            if(resultStates.isEmpty()) continue;
+            Connection newConnection = new Connection();
+            newConnection.action = actionMap.get(allDefinedActions.get(i));
+            newConnection.states = resultStates;
+            
+            List<StateNode> resultNodes = new ArrayList();
+            for(int j = 0; j < resultStates.size(); j++)
+            {
+                resultNodes.add(t.getNodeForState(resultStates.get(j)));
+            }
+            newConnection.nodes = resultNodes;
+            
+            
+            connections.put(allDefinedActions.get(i), newConnection);
+        }
+    }
+    public Collection<Connection> getConnections(MyController c, StateTree t, int index)
+    {
+        this.connections = null;
+        setConnection(c, t, index);
+        return this.connections.values();
+    }
+    
     public void setNodeState(DynamicMDPState s)
     {
        this.s = s.copy();
