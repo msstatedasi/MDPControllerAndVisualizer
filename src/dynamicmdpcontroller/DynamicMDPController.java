@@ -99,11 +99,11 @@ public class DynamicMDPController {
 
         //Generating full MDP
         globalController = new GlobalController(locationDir + "/termination.term", locations, mergedAttributes, localGoals, wc, wt, gamma);
-        try {
-            globalController.planFromState();
-        } catch (FinalStateException ex) {
-            System.out.println("No need to optimize: system already in final state");
-        }
+//        try {
+//            globalController.planFromState();
+//        } catch (FinalStateException ex) {
+//            System.out.println("No need to optimize: system already in final state");
+//        }
 
     }
 

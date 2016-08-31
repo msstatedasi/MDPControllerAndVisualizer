@@ -43,6 +43,10 @@ public class Manager {
     double degredation;
     DataDisplay dd;
     List<String> controllerNames;
+    int numOfPushedButtons = 0;
+    List<DynamicMDPState> finalStates;
+    List<String> globalAttribs;
+    DecisionSupportConnection dsc;
 
     /**
      * This function is only called by {@link BurlapVisualizer.TestProject} when the
@@ -51,7 +55,7 @@ public class Manager {
      * All this function does is call {@link visual.Visualizer#closeWindows() }
      * to close all windows with the old initial state.
      */
-    public void close() {
+    public void close() throws FinalStateException, IOException, ParseException {
         if(MDPvisual != null) MDPvisual.closeWindows();
     }
 
@@ -77,8 +81,12 @@ public class Manager {
      */
     public void run(double cost, double time, double gamma, double degredation) throws Exception 
     {
+        
+        this.finalStates = new ArrayList();
+        this.globalAttribs = new ArrayList();
         this.degredation = degredation;
         c = new MyController(cost, time, gamma);//this sets up and solves the MDP solution
+        this.dsc = c.getDSC();
         
         int numOfControllers = c.getNumOfLocalControllers();
         controllerNames = c.getAllControllerNames(numOfControllers);
@@ -105,8 +113,6 @@ public class Manager {
                 allStateAttribs.add(c.getAllStateAttributes(i).get(j));
             }
         }
-        
-        
         dd = new DataDisplay(allStateAttribs, c);
     }
     
@@ -114,9 +120,47 @@ public class Manager {
     {
         JButton button;
         
+        
         public buttonAction(JButton button)
         {
             this.button = button;
+        }
+        
+        public void PathFinished(DynamicMDPState s) throws FinalStateException, IOException, ParseException
+        {
+            finalStates.add(s);
+            if(numOfPushedButtons == controllerNames.size())
+            {
+                DynamicMDPState finalState = new DynamicMDPState();
+                for(DynamicMDPState dmdps : finalStates)
+                {
+                    finalState.putAllAttributes(dmdps.getAttributes());
+                }
+                handleGlobalPath(finalState);
+                
+            }
+        }
+        
+        
+        public void handleGlobalPath(DynamicMDPState s) throws FinalStateException, IOException, ParseException
+        {
+//                DecisionSupportConnection dsc = new DecisionSupportConnection();
+                takenActions = dsc.getGlobalOptimalPathActions(s);
+                takenStates = dsc.getGlobalOptimalPath(s);//the states taken from intial state to target state
+                
+                
+                List<GMEAction> allPosActions = dsc.getAllGlobalDefinedActions();//this is a list of every action that the MDP has defined
+                
+                
+                //now we have all our data we need for the visualizer.
+                //To make things easier I created the StateTree class which can wrap all
+                //this data into one nice data structure
+                StateTree tree = new StateTree(s, nodes, allPosActions);
+                tree.setTakenActions(takenActions);
+                tree.setStatesTaken(takenStates);
+//                tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
+                
+                MDPvisual = new Visualizer(tree, globalAttribs, allPosActions, c, degredation, -1, dd, this);//the visualizer takes over from here
         }
         
         @Override
@@ -124,12 +168,11 @@ public class Manager {
         {
             try 
             {
+                numOfPushedButtons++;
                 this.button.setEnabled(false);
                 int length = e.getActionCommand().split(" ").length;
                 System.out.println(e.getActionCommand().split(" ")[length - 1]);
                 int index = controllerNames.indexOf(e.getActionCommand());
-//                int index = Integer.parseInt(e.getActionCommand().split(" ")[length - 1]);
-                
                 
                 
                 
@@ -137,19 +180,23 @@ public class Manager {
                 
                 
                 List<String> allAttribs = c.getAllStateAttributes(index);
-                
+                for(String str : allAttribs)
+                {
+                    globalAttribs.add(str);
+                }
                 
 //                nodes = c.getEntireStateSpaceAndConnections(index);//nodes is a list that contains trees with a height of at most 2.
                 //for more info about what c.getEntireStateSpaceAndConnections() does look
                 //at the JavaDoc
                 
                 
-                DecisionSupportConnection dsc = new DecisionSupportConnection();
+                
                 takenActions = dsc.getLocalOptimalPathActions(index, dsc.getInitalState(index));//the actions taken from intial state to target state
                 takenStates = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));//the states taken from intial state to target state
                 
                 if(takenStates == null)
                 {
+                    PathFinished(dsc.getInitalState(index));
                     return;
                 }
                 
@@ -164,7 +211,9 @@ public class Manager {
                 tree.setStatesTaken(takenStates);
 //                tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
                 
-                MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation, index, dd);//the visualizer takes over from here
+                MDPvisual = new Visualizer(tree, allAttribs, allPosActions, c, degredation, index, dd, this);//the visualizer takes over from here
+                
+                
                 
             } catch (FinalStateException | IOException | ParseException ex) {
                 Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);

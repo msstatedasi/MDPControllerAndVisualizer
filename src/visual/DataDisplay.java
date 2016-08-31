@@ -24,6 +24,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JTable;
@@ -145,7 +146,7 @@ public class DataDisplay implements ItemListener
         rewardTotal = new JLabel();
         
         
-        JFrame treeFrame = new JFrame("testing");
+        JFrame treeFrame = new JFrame("State and Action info");
         treeFrame.setVisible(true);
         
         inithtcr = new HighlightTreeCellRenderer(stateTree.getCellRenderer());
@@ -264,7 +265,7 @@ public class DataDisplay implements ItemListener
         {
             DefaultMutableTreeNode prevFound = top;
             
-            for(int j = 0; j < list.get(i).split("_").length; j++)
+            for(int j = 0; j < 4; j++) //this was a last minute fix for a modeling issue
             {
                 boolean found = false;
                 String attrib = list.get(i).split("_")[j];
@@ -585,9 +586,23 @@ public class DataDisplay implements ItemListener
            DefaultMutableTreeNode node = (DefaultMutableTreeNode) actionTree.getLastSelectedPathComponent();
            
            if(node == null) return;
-           
-           String actionName = prefix + node.getUserObject().toString().split(" = ")[0];
+           String actionName = "";
+            TreeNode[] wholePath = node.getPath();
+            for(TreeNode n : wholePath)
+            {
+                DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) n;
+                actionName = actionName + "_" + dmtn.getUserObject();
+            }
+            actionName = actionName.substring(6);
+            int numOfActionMaps = myController.getNumOfLocalControllers();
+//           String actionName = node.getUserObject().toString().split(" = ")[0];
+            int controllerNum = 0;
            GMEAction a = myController.getActionMap(index).get(actionName);
+           while(a == null && controllerNum < numOfActionMaps)
+           {
+               a = myController.getActionMap(controllerNum).get(actionName);
+               controllerNum++;
+           }
            
            if(a == null) return;
            
@@ -630,7 +645,6 @@ public class DataDisplay implements ItemListener
         public HighlightTreeCellRenderer(TreeCellRenderer renderer) 
         {
             q = new ArrayList<>();
-//            q.add("logVer");
             this.renderer = renderer;
         }
         @Override
@@ -638,18 +652,15 @@ public class DataDisplay implements ItemListener
             boolean isSelected, boolean expanded,
             boolean leaf, int row, boolean hasFocus) 
             {
-//                System.out.println(leaf);
                 JComponent c = (JComponent)renderer.getTreeCellRendererComponent(tree, value, isSelected, expanded, leaf, row, hasFocus);
                 if(isSelected) 
                 {
-//                    System.out.println("if");
                     c.setOpaque(false);
                     c.setForeground(getTextSelectionColor());
                     c.setBackground(Color.BLUE); //getBackgroundSelectionColor());
                 }
                 else
                 {
-//                    System.out.println("else " + value);
                     if(!q.isEmpty())
                     {
                         c.setOpaque(true);

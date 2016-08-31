@@ -17,6 +17,8 @@ import dynamicmdpcontroller.controllers.GlobalController;
 import dynamicmdpcontroller.controllers.LocalController;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -29,6 +31,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 
     private Episode[] localEpisode = null;
     private Episode globalEpisode = null;
+    
 
     public DecisionSupportConnection() {
         localControllers = DynamicMDPController.getInstance().getLocalControllers();
@@ -40,7 +43,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
         localControllers[index].planFromState(s);
     }
 
-    private void planFromGlobalState(DynamicMDPState s) throws FinalStateException {
+    private void planFromGlobalState(DynamicMDPState s) throws FinalStateException, Exception {
         globalController.planFromState(s);
     }
 
@@ -89,8 +92,13 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 
     @Override
     public List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState s) throws FinalStateException {
-        if (globalEpisode == null) {
-//            planFromGlobalState(s);
+        if (globalEpisode == null) 
+        {
+            try {
+                planFromGlobalState(s);
+            } catch (Exception ex) {
+                Logger.getLogger(DecisionSupportConnection.class.getName()).log(Level.SEVERE, null, ex);
+            }
             globalEpisode = globalController.getEpisode();
         }
         List<Action> actions = globalEpisode.actionSequence;
@@ -148,7 +156,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     }
 
     @Override
-    public double getGlobalPathReward(DynamicMDPState s) throws FinalStateException {
+    public double getGlobalPathReward(List<DynamicMDPState> states, List<GMEAction> acts) throws FinalStateException {
         if (globalEpisode == null) {
 //            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
@@ -158,7 +166,16 @@ public class DecisionSupportConnection implements DecisionSupportInterface
         for (Double d : rewards) {
             ret += d;
         }
-        return ret;
+        
+        double reward = 0;
+        for(int i = 0; i < states.size() - 1; i++)
+        {
+            reward += this.globalController.getDomainGen().getRf().reward(states.get(i), acts.get(i), states.get(i+1));
+        }
+        
+        return reward;
+        
+        
     }
 
     @Override
@@ -206,13 +223,14 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 //            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
         }
-        return globalController.getPlanner().value(s);
+        return globalController.getPlanner().performBellmanUpdateOn(s);
     }
 
     @Override
     public DynamicMDPState getInitalState(int index) 
     {
-        return this.localControllers[index].getInitState();
+        if(index >= 0) return this.localControllers[index].getInitState();
+        else return this.getGlobalinitState();
     }
 
     @Override
@@ -270,6 +288,12 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     {
         return localControllers[index].getTf().isTerminal(s);
     }
+    
+    @Override
+    public boolean isTerminalState(DynamicMDPState s)
+    {
+        return globalController.getTF().isTerminal(s);
+    }
 
     @Override
     public String stateString(DynamicMDPState s) 
@@ -289,6 +313,12 @@ public class DecisionSupportConnection implements DecisionSupportInterface
         Episode e = localControllers[index].getOptimalPathFrom(s);
         return e;
     }
+    @Override
+    public Episode getGlobalEpisodeFromState(DynamicMDPState s)
+    {
+        Episode e = globalController.getOptimalPathFrom(s);
+        return e;
+    }
 
     @Override
     public int getNumOfLocalControllers() 
@@ -300,5 +330,10 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public String getNameOfController(int index) 
     {
         return localControllers[index].getDomainGen().getActions().get(0).actionName().split("_")[0];
+    }
+
+    public DynamicMDPState getGlobalinitState() 
+    {
+        return (DynamicMDPState) globalEpisode.stateSequence.get(0);
     }
 }

@@ -9,6 +9,7 @@ import BurlapVisualizer.MyController;
 import dynamicmdpcontroller.DecisionSupportConnection;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.actions.GMEAction;
+import dynamicmdpcontroller.controllers.FinalStateException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class ActionValueContainer {
         controller = c;
     }
     
-    public void addAction(int index, DynamicMDPState s, DynamicMDPState result, GMEAction act)
+    public void addAction(int index, DynamicMDPState s, DynamicMDPState result, GMEAction act) throws FinalStateException
     {
         double value = controller.getReward(index, act, s);
         rewardForAction.add(value);

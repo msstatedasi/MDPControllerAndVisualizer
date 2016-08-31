@@ -20,10 +20,11 @@ public interface DecisionSupportInterface {
     List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState d)throws FinalStateException;
     List<DynamicMDPState> getGlobalOptimalPath(DynamicMDPState s) throws FinalStateException;
     List<DynamicMDPState> getLocalOptimalPath(int index, DynamicMDPState s) throws FinalStateException;
-    double getGlobalPathReward(DynamicMDPState s) throws FinalStateException;
+    double getGlobalPathReward(List<DynamicMDPState> states, List<GMEAction> acts) throws FinalStateException;
     double getLocalPathReward(int index, DynamicMDPState s) throws FinalStateException;
     double getLocalPathReward(int index, List<GMEAction> actions, List<DynamicMDPState> states);
     Episode getEpisodeFromState(int index, DynamicMDPState s);
+    Episode getGlobalEpisodeFromState(DynamicMDPState s);
     void printState(DynamicMDPState s);
     String stateString(DynamicMDPState s);
     List<String> getAllStateAttributes(DynamicMDPState s);
@@ -38,6 +39,7 @@ public interface DecisionSupportInterface {
     List<DynamicMDPState> getAllStates(int index);
     List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction a);
     boolean isTerminalState(int index, DynamicMDPState s);
+    boolean isTerminalState(DynamicMDPState s); 
     
     
     int getNumOfLocalControllers();

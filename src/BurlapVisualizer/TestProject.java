@@ -5,11 +5,13 @@
  */
 package BurlapVisualizer;
 
+import dynamicmdpcontroller.controllers.FinalStateException;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
@@ -147,8 +149,16 @@ public class TestProject {
         public void actionPerformed(ActionEvent e) {
             if (e.getActionCommand().equals("OK")) {
                 
-                if (m != null) { //if there is a manager running close it.
+                if (m != null) { try {
+                    //if there is a manager running close it.
                     m.close();
+                    } catch (FinalStateException ex) {
+                        Logger.getLogger(TestProject.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(TestProject.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (ParseException ex) {
+                        Logger.getLogger(TestProject.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
                 

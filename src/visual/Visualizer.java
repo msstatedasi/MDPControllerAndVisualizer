@@ -6,6 +6,7 @@
 package visual;
 
 
+import BurlapVisualizer.Manager;
 import Tree.StateNode;
 import Tree.StateTree;
 import java.io.IOException;
@@ -119,20 +120,20 @@ public final class Visualizer
     boolean containsSubOptimalPath;
     boolean containsNonOptimalPath;
     int index;
+    Manager.buttonAction mba;
     
     
     
     /**
      * This function will close the {@link visual.DataDisplay} and this class.
      */
-    public void closeWindows()
+    public void closeWindows() throws FinalStateException, IOException, ParseException
     {
         if(frame != null && dataDisplay != null)
         {
             frame.dispose();
-//            dataDisplay.close(); 
             chart.close();
-            
+            mba.PathFinished(lastComputeState.thisState.s);
         }
 
     }
@@ -149,8 +150,9 @@ public final class Visualizer
      * @throws IOException
      * @throws ParseException 
      */
-    public Visualizer(StateTree tree, List<String> allAttribs, List<GMEAction> actions, MyController controller, double degredation, int index, DataDisplay dd) throws IOException, ParseException, FinalStateException
+    public Visualizer(StateTree tree, List<String> allAttribs, List<GMEAction> actions, MyController controller, double degredation, int index, DataDisplay dd, Manager.buttonAction m) throws IOException, ParseException, FinalStateException
     {
+        mba = m;
         this.dataDisplay = dd;
         this.index = index;
         nodeMap = new HashMap<>();
@@ -364,7 +366,7 @@ public final class Visualizer
      * how nodes connect to other nodes.
      * @throws ParseException 
      */
-    public void setUpData(boolean init) throws ParseException, FinalStateException
+    public void setUpData(boolean init) throws ParseException, FinalStateException, IOException
     {
         //this checks to see 
         if(lastComputeState != null && thisController.isTerminal(index, lastComputeState.thisState.s)) this.closeWindows();
@@ -512,7 +514,7 @@ public final class Visualizer
         }
     }
     
-    private int setEdgesBetweenPreExistingNodes(Node n, int i , int j)
+    private int setEdgesBetweenPreExistingNodes(Node n, int i , int j) throws FinalStateException
     {
 
         DynamicMDPState prevState;
@@ -570,6 +572,7 @@ public final class Visualizer
         for(int i = 0; i < visibleStates.size(); i++)
         {
             n = graph.getRoot();
+            System.out.println(n);
             DynamicMDPState prevState = null;
             int numOfNodes = visibleStates.get(i).size();
             for(int j = 0; j < numOfNodes; j++)
@@ -1183,23 +1186,7 @@ public final class Visualizer
             //find in the graph
             Node firstNode = nodeMap.get(this.chosenStates.get(i));
             Node secondNode = nodeMap.get(this.chosenStates.get(i+1));
-//            for(int j = 0; j < graph.getNodeCount(); j++)
-            {
-                //ok we found the state in the graph
-//                if(graph.getNode(j).get("stateClass").equals(this.chosenStates.get(i)))
-                {
-                    //now find the NEXT state in the graph
-//                    for(int k = 0; k < graph.getNodeCount(); k++)
-                    {
-                        //now we have found both states in the graph
-//                        if(graph.getNode(k).get("stateClass").equals(this.chosenStates.get(i + 1)))
-                        {
-                            //get the edge and set the weight accordingly
-                            graph.getEdge(firstNode, secondNode).set("weight", 200);
-                        }
-                    }
-                }
-            }
+            graph.getEdge(firstNode, secondNode).set("weight", 200);  
         }
     }
     

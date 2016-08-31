@@ -180,6 +180,7 @@ public class GMEAction extends DynamicMDPAction {
             eval = elprocessor.eval(super.preCondition);
         } catch (Exception e) 
         {
+            System.out.println(this.name);
             e.printStackTrace();
         }
         boolean ret = Boolean.valueOf(eval.toString());

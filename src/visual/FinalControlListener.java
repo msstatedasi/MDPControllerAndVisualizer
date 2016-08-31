@@ -11,6 +11,7 @@ import java.awt.BasicStroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -177,6 +178,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                     goToState(item);
                 } catch (FinalStateException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
             
@@ -184,6 +187,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                 try {
                     expandSelectedNode(item);
                 } catch (FinalStateException ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
@@ -208,6 +213,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                     ChangeCurrentState(item, true);
                 } catch (FinalStateException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
             
@@ -220,6 +227,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                 {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (FinalStateException ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
@@ -238,7 +247,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
     //----------------------------------------------------------------------
     //begin private functions
     
-    private void expandSelectedNode(Tuple item) throws FinalStateException
+    private void expandSelectedNode(Tuple item) throws FinalStateException, IOException
     {
         if(getPathFrom( (DynamicMDPState) currentState.get("stateClass"), (DynamicMDPState) item.get("stateClass")) == null && !currentState.get("stateClass").equals(item.get("stateClass"))) return;
         StateNode clickedState = null;
@@ -285,7 +294,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
         }
     }
     
-    private void ChangeCurrentState(Tuple item, boolean updateGraph) throws FinalStateException
+    private void ChangeCurrentState(Tuple item, boolean updateGraph) throws FinalStateException, IOException
     {
         thisVis.temporaryHiddenStates = new HashMap<>();
         thisVis.temporaryHiddentStateNodes = new HashMap<DynamicMDPState, StateNode>();
@@ -356,7 +365,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
             
     }
     
-    private void goToState(VisualItem item) throws FinalStateException
+    private void goToState(VisualItem item) throws FinalStateException, IOException
     {
         ContainerOfActionAndStateSeqence container = getPathFrom((DynamicMDPState) currentState.get("stateClass"), (DynamicMDPState) item.get("stateClass"));
         
@@ -421,7 +430,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
         }
     }
     
-    private void handleHideEdge(VisualItem item) throws ParseException, FinalStateException
+    private void handleHideEdge(VisualItem item) throws ParseException, FinalStateException, IOException
     {
         if(thisVis.tree.statesTaken.contains((DynamicMDPState) item.get("srcState")) &&
                 thisVis.tree.statesTaken.contains((DynamicMDPState) item.get("resultState")))

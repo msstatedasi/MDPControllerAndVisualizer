@@ -56,7 +56,12 @@ public class MyController extends DynamicMDPController {
         super.setupAndRunController(cost, time, gamma);
         nodes = new HashMap<>();
         this.gamma = gamma;
-        dsc = new DecisionSupportConnection();
+        this.dsc = new DecisionSupportConnection();
+    }
+    public DecisionSupportConnection getDSC()
+    {
+        return this.dsc;
+        
     }
     
     public int getNumOfLocalControllers()
@@ -80,7 +85,8 @@ public class MyController extends DynamicMDPController {
      */
     public List<DynamicMDPState> getStateSequenceToTarget(int index) throws FinalStateException
     {
-        return dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
+        if(index >= 0) return dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
+        return dsc.getGlobalOptimalPath(dsc.getGlobalinitState());
     }
     
     public double getGamma()
@@ -157,8 +163,19 @@ public class MyController extends DynamicMDPController {
     //this function gets only the OPTIMAL episode in each local Controller
     public Episode getEpisode(int index) throws FinalStateException
     {
-        List<DynamicMDPState> states = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
-        List<GMEAction> actions = dsc.getLocalOptimalPathActions(index, dsc.getInitalState(index));
+        List<DynamicMDPState> states;
+        List<GMEAction> actions;
+        if(index >= 0)
+        {
+            states = dsc.getLocalOptimalPath(index, dsc.getInitalState(index));
+            actions = dsc.getLocalOptimalPathActions(index, dsc.getInitalState(index));
+        }
+        else
+        {
+            states = dsc.getGlobalOptimalPath(dsc.getGlobalinitState());
+            actions = dsc.getGlobalOptimalPathActions(dsc.getGlobalinitState());
+        }
+        
         Episode e = new Episode();
         
         for(DynamicMDPState s: states)
@@ -179,7 +196,9 @@ public class MyController extends DynamicMDPController {
     
     public List<String> allDefinedActions(int index)
     {
-        List<GMEAction> actions = dsc.getAllLocalDefinedActions(index);
+        List<GMEAction> actions;
+        if(index >= 0) actions = dsc.getAllLocalDefinedActions(index);
+        else actions = dsc.getAllGlobalDefinedActions();
         List<String> actionStrings = new ArrayList<>();
         for(int i = 0; i < actions.size(); i++)
         {
@@ -242,14 +261,15 @@ public class MyController extends DynamicMDPController {
             return Reward;
         }
         
-        public double getReward(int index, List<GMEAction> acts, List<DynamicMDPState> states) 
+        public double getReward(int index, List<GMEAction> acts, List<DynamicMDPState> states) throws FinalStateException 
         {
             double sum = 0;
-            sum = dsc.getLocalPathReward(index, acts, states);
+            if(index >= 0) sum = dsc.getLocalPathReward(index, acts, states);
+            else sum = dsc.getGlobalPathReward(states, acts);
             return sum;
         }
         
-        public double getReward(int index, GMEAction act, DynamicMDPState state)
+        public double getReward(int index, GMEAction act, DynamicMDPState state) throws FinalStateException
         {
             List<GMEAction> singleAction = new ArrayList();
             singleAction.add(act);
@@ -261,7 +281,9 @@ public class MyController extends DynamicMDPController {
     public Hashtable<String, GMEAction> getActionMap(int index) 
     {
         Hashtable<String, GMEAction> table  = new Hashtable<>();
-        List<GMEAction> allActions = dsc.getAllLocalDefinedActions(index);
+        List<GMEAction> allActions;
+        if(index >= 0) allActions = dsc.getAllLocalDefinedActions(index);
+        else allActions = dsc.getAllGlobalDefinedActions();
         for(GMEAction a:allActions)
         {
             table.put(a.actionName(), a);
@@ -271,16 +293,19 @@ public class MyController extends DynamicMDPController {
 
     public double getV(int index, DynamicMDPState get) throws FinalStateException 
     {
-        return dsc.getLocalStateValue(index, get);
+        if(index >= 0) return dsc.getLocalStateValue(index, get);
+        return dsc.getGlobalStateValue(get);
     }
     
     public boolean isTerminal(int index, DynamicMDPState s)
     {
-        return dsc.isTerminalState(index, s);
+        if(index >= 0) return dsc.isTerminalState(index, s);
+        return dsc.isTerminalState(s);
     }
 
     public Episode getOptimalPathFrom(int index, DynamicMDPState s) throws FinalStateException 
     {
-        return dsc.getEpisodeFromState(index, s);
+        if(index >= 0) return dsc.getEpisodeFromState(index, s);
+        return dsc.getGlobalEpisodeFromState(s);
     }
 }

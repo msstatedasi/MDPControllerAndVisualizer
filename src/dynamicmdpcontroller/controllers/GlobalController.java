@@ -38,10 +38,14 @@ public class GlobalController {
     private List<Location> locations = null;
     private Termination[] localGoals = null;
     private ValueIteration planner = null;
+    private Policy p = null;
     
     private double gamma;
     private double wc;
     private double wt;
+    
+    FilteredDomainGenerator fdg;
+    String path;
 
     public GlobalController(String termPath, List<Location> locations,
             HashMap<Object, Object> stateAttributes, Termination[] localGoals, double gamma, double wc, double wt) throws Exception {
@@ -52,9 +56,21 @@ public class GlobalController {
         this.stateAttributes = stateAttributes;
         this.localGoals = localGoals;
         this.currentState = init(termPath, wc, wt);
+        this.path = termPath;
     }
 
-    private DynamicMDPState init(String termPath, double wc, double wt) throws Exception {
+    public Termination getTF()
+    {
+        return this.tf;
+    }
+    
+        public Episode getOptimalPathFrom(DynamicMDPState s) {
+        Episode e = PolicyUtils.rollout(p, s, fdg.getDomain().getModel());
+        return e;
+    }
+        
+    private DynamicMDPState init(String termPath, double wc, double wt) throws Exception 
+    {
         System.out.println("---- Working on global home ----");
         domainGen = new HomeDomainGenerator(termPath, wc, wt);
         domainGen.initialStateGenerator(locations);
@@ -70,8 +86,10 @@ public class GlobalController {
         return currentState;
     }
 
-    public void planFromState(DynamicMDPState state) throws FinalStateException {
-        this.currentState = state;
+    public void planFromState(DynamicMDPState state) throws FinalStateException, Exception {
+        this.stateAttributes = new HashMap<>();
+        this.stateAttributes.putAll(state.getAttributes());
+        this.init(path, wc, wt);
         planFromState();
     }
 
@@ -81,7 +99,7 @@ public class GlobalController {
             throw new FinalStateException();
         }
         System.out.println("---- Home is not in goal state ----");
-        FilteredDomainGenerator fdg = new FilteredDomainGenerator(tf);
+        fdg = new FilteredDomainGenerator(tf);
         DynamicMDPState filteredState = fdg.filterState(currentState, domainGen.getActions());
         System.out.println(StateUtilities.stateToString(filteredState));
 
@@ -89,7 +107,7 @@ public class GlobalController {
         planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, nThread);
 //            ValueIteration planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
 //            planner.performReachabilityFrom(filteredState);
-        Policy p = planner.planFromState(filteredState);
+        p = planner.planFromState(filteredState);
         episode = PolicyUtils.rollout(p, filteredState, fdg.getDomain().getModel());
         Iterator<Action> actions = episode.actionSequence.iterator();
         System.out.println("---- Further actions to be executed: ----");
