@@ -133,7 +133,7 @@ public final class Visualizer
         {
             frame.dispose();
             chart.close();
-            mba.PathFinished(lastComputeState.thisState.s);
+            if(index != -1) mba.PathFinished(lastComputeState.thisState.s);
         }
 
     }

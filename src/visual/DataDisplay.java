@@ -265,7 +265,7 @@ public class DataDisplay implements ItemListener
         {
             DefaultMutableTreeNode prevFound = top;
             
-            for(int j = 0; j < 4; j++) //this was a last minute fix for a modeling issue
+            for(int j = 0; j < list.get(i).split("_").length; j++) //this was a last minute fix for a modeling issue
             {
                 boolean found = false;
                 String attrib = list.get(i).split("_")[j];

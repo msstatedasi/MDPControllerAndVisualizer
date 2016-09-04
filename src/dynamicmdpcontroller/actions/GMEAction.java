@@ -98,7 +98,7 @@ public class GMEAction extends DynamicMDPAction {
             String attributeType = attributeTypes.get(prefix + attributeKey);
 
             if (attributeType == null) {
-                System.out.println();
+                System.out.println(attributeKey);
             }
 
             //Post-condition attributes caching
@@ -180,9 +180,10 @@ public class GMEAction extends DynamicMDPAction {
             eval = elprocessor.eval(super.preCondition);
         } catch (Exception e) 
         {
-            System.out.println(this.name);
             e.printStackTrace();
         }
+        
+        if(eval == null) return false; //STRONGLY ASK DR. STEFANO
         boolean ret = Boolean.valueOf(eval.toString());
         return ret;
     }

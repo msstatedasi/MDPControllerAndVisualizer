@@ -142,11 +142,14 @@ public class Manager {
         }
         
         
-        public void handleGlobalPath(DynamicMDPState s) throws FinalStateException, IOException, ParseException
+        public void handleGlobalPath(DynamicMDPState s) throws IOException, ParseException
         {
+            try
+            {
 //                DecisionSupportConnection dsc = new DecisionSupportConnection();
-                takenActions = dsc.getGlobalOptimalPathActions(s);
-                takenStates = dsc.getGlobalOptimalPath(s);//the states taken from intial state to target state
+                    takenActions = dsc.getGlobalOptimalPathActions(s);
+                    takenStates = dsc.getGlobalOptimalPath(s);//the states taken from intial state to target state
+
                 
                 
                 List<GMEAction> allPosActions = dsc.getAllGlobalDefinedActions();//this is a list of every action that the MDP has defined
@@ -155,12 +158,16 @@ public class Manager {
                 //now we have all our data we need for the visualizer.
                 //To make things easier I created the StateTree class which can wrap all
                 //this data into one nice data structure
-                StateTree tree = new StateTree(s, nodes, allPosActions);
+                StateTree tree = new StateTree(dsc.getGlobalinitState(), nodes, allPosActions); //here I had s but replaced with dsc.getGlobalInitState
                 tree.setTakenActions(takenActions);
                 tree.setStatesTaken(takenStates);
 //                tree.buildTree();//this sets the connections between connections that c.getIntireStatSpaceAndConnections() did not do.
-                
+
                 MDPvisual = new Visualizer(tree, globalAttribs, allPosActions, c, degredation, -1, dd, this);//the visualizer takes over from here
+            } catch (FinalStateException ex) {
+                return;
+//                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
         @Override
