@@ -178,7 +178,6 @@ public class Manager {
                 numOfPushedButtons++;
                 this.button.setEnabled(false);
                 int length = e.getActionCommand().split(" ").length;
-                System.out.println(e.getActionCommand().split(" ")[length - 1]);
                 int index = controllerNames.indexOf(e.getActionCommand());
                 
                 

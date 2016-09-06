@@ -183,7 +183,7 @@ public class GMEAction extends DynamicMDPAction {
             e.printStackTrace();
         }
         
-        if(eval == null) return false; //STRONGLY ASK DR. STEFANO
+        if(eval == null) return false;
         boolean ret = Boolean.valueOf(eval.toString());
         return ret;
     }

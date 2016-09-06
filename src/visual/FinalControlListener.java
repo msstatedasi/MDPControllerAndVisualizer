@@ -385,7 +385,6 @@ public class FinalControlListener extends ControlAdapter implements Control {
 //                Iterator<Tuple> iter = edges.tuples();
                 while(iter.hasNext())
                 {
-                    System.out.println("here");
                     Edge thisEdge = (Edge) iter.next();
                     Tuple thisTuple = thisVis.vis.getVisualItem("graph.edges", thisEdge);
                     if(thisTuple.get("CriteriaAction").equals(container.actions.get(i)) && 

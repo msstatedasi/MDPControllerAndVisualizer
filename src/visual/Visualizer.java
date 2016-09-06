@@ -413,7 +413,7 @@ public final class Visualizer
             //we remove them because these actions have a tendency to change
             vis.removeAction("color");
             vis.removeAction("layout");
-            vis.repaint();
+//            vis.repaint();
             graph.clear();
         }
         
@@ -572,7 +572,6 @@ public final class Visualizer
         for(int i = 0; i < visibleStates.size(); i++)
         {
             n = graph.getRoot();
-            System.out.println(n);
             DynamicMDPState prevState = null;
             int numOfNodes = visibleStates.get(i).size();
             for(int j = 0; j < numOfNodes; j++)
@@ -749,7 +748,6 @@ public final class Visualizer
                     edges.add(e); //edges is a list of the edges from initial to target
                 }
             }
-            System.out.println(nodeSrc.get("nodeInfo"));
                         
         }//end of loop
         stateValueContainer.addStateValue(0); //final state has 0 value
