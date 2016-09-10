@@ -104,11 +104,14 @@ public class GlobalController {
         System.out.println(StateUtilities.stateToString(filteredState));
 
         SimpleHashableStateFactory hashingFactory = new SimpleHashableStateFactory(false);
-//        planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, nThread);
-        planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
+        planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, nThread);
+//        planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
+//----------------------------------------------------------------------------------
+//this area is where stuff gets weird.
         planner.performReachabilityFrom(filteredState);
         p = planner.planFromState(filteredState);
         episode = PolicyUtils.rollout(p, filteredState, fdg.getDomain().getModel());
+//------------------------------------------------------------------------------------------
         Iterator<Action> actions = episode.actionSequence.iterator();
         System.out.println("---- Further actions to be executed: ----");
         while (actions.hasNext()) {

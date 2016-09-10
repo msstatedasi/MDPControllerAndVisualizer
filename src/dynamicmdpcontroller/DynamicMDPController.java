@@ -98,7 +98,7 @@ public class DynamicMDPController {
         }
 
         //Generating full MDP
-        globalController = new GlobalController(locationDir + "/termination.term", locations, mergedAttributes, localGoals, wc, wt, gamma);
+        globalController = new GlobalController(locationDir + "/termination.term", locations, mergedAttributes, localGoals, wc, wt, gamma); //problem in line 110 of GlobalController
         try {
             globalController.planFromState();
         } catch (FinalStateException ex) {
