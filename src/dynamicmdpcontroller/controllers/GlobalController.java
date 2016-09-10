@@ -104,9 +104,9 @@ public class GlobalController {
         System.out.println(StateUtilities.stateToString(filteredState));
 
         SimpleHashableStateFactory hashingFactory = new SimpleHashableStateFactory(false);
-        planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, nThread);
-//            ValueIteration planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
-//            planner.performReachabilityFrom(filteredState);
+//        planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, nThread);
+        planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
+        planner.performReachabilityFrom(filteredState);
         p = planner.planFromState(filteredState);
         episode = PolicyUtils.rollout(p, filteredState, fdg.getDomain().getModel());
         Iterator<Action> actions = episode.actionSequence.iterator();
