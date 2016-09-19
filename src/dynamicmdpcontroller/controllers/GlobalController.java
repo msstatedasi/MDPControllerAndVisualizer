@@ -17,6 +17,7 @@ import static dynamicmdpcontroller.DynamicMDPController.nThread;
 import static dynamicmdpcontroller.DynamicMDPController.stateGenThread;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.Termination;
+import dynamicmdpcontroller.planners.MyGreedyQPolicy;
 import dynamicmdpcontroller.planners.ParallelVI;
 import gmeconnector.entities.Location;
 import java.util.HashMap;
@@ -65,6 +66,7 @@ public class GlobalController {
     }
     
         public Episode getOptimalPathFrom(DynamicMDPState s) {
+        if(this.tf.isTerminal(s)) return new Episode(s);
         Episode e = PolicyUtils.rollout(p, s, fdg.getDomain().getModel());
         return e;
     }
@@ -75,6 +77,7 @@ public class GlobalController {
         domainGen = new HomeDomainGenerator(termPath, wc, wt);
         domainGen.initialStateGenerator(locations);
         domainGen.registerActions(locations);
+        domain = domainGen.getDomain();
         currentState = new DynamicMDPState();
         currentState.putAllAttributes(stateAttributes);
         tf = domainGen.getTf();
@@ -98,26 +101,31 @@ public class GlobalController {
             episode = null;
             throw new FinalStateException();
         }
+                System.out.println("Termination condition: " + tf.getTerminationCondition());
+
         System.out.println("---- Home is not in goal state ----");
         fdg = new FilteredDomainGenerator(tf);
         DynamicMDPState filteredState = fdg.filterState(currentState, domainGen.getActions());
-        System.out.println(StateUtilities.stateToString(filteredState));
+//        DynamicMDPState filteredState = currentState;
+System.out.println(StateUtilities.stateToString(filteredState));
 
         SimpleHashableStateFactory hashingFactory = new SimpleHashableStateFactory(false);
-        planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, nThread);
-//        planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
+//        planner = new ParallelVI(fdg.getDomain(), gamma, hashingFactory, 1e-10, 100, stateGenThread, 1);
+        planner = new ValueIteration(fdg.getDomain(), 0.99, hashingFactory, 1e-3, 100);
 //----------------------------------------------------------------------------------
 //this area is where stuff gets weird.
         planner.performReachabilityFrom(filteredState);
         p = planner.planFromState(filteredState);
-        episode = PolicyUtils.rollout(p, filteredState, fdg.getDomain().getModel());
-//------------------------------------------------------------------------------------------
-        Iterator<Action> actions = episode.actionSequence.iterator();
-        System.out.println("---- Further actions to be executed: ----");
-        while (actions.hasNext()) {
-            Action a = actions.next();
-            System.out.print(a.actionName() + ",");
-        }
+        MyGreedyQPolicy qPolicy = new MyGreedyQPolicy(planner);
+        episode = qPolicy.rolloutPolicy(filteredState, fdg.getDomain().getModel());
+//        episode = PolicyUtils.rollout(p, filteredState, fdg.getDomain().getModel(), 20);
+////------------------------------------------------------------------------------------------
+//        Iterator<Action> actions = episode.actionSequence.iterator();
+//        System.out.println("---- Further actions to be executed: ----");
+//        while (actions.hasNext()) {
+//            Action a = actions.next();
+//            System.out.print(a.actionName() + ",");
+//        }
     }
 
     public HomeDomainGenerator getDomainGen() {

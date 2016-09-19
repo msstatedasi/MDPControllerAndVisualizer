@@ -215,6 +215,8 @@ public class MyController extends DynamicMDPController {
      */
     public List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction act)
     {
+        System.out.println(act.actionName());
+        System.out.flush();
         return dsc.getResultingStates(s, act);
     }
     

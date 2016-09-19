@@ -669,7 +669,7 @@ public class DataDisplay implements ItemListener
                     for(int i = 0; i < q.size(); i++)
                     {
                         String valueStr = value.toString();
-                        if(q.get(i).contains(valueStr.split(" = ")[0]))//if(valueStr.contains(q.get(i)))//if(StringUtils.containsIgnoreCase(valueStr, q.get(i)))
+                        if(valueStr.split(" = ").length == 2 && q.get(i).contains(valueStr.split(" = ")[0]))//if(valueStr.contains(q.get(i)))//if(StringUtils.containsIgnoreCase(valueStr, q.get(i)))
                         {
                             shouldHighlight = true;
                             break;

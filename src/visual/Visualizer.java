@@ -828,7 +828,7 @@ public final class Visualizer
      */
     public void addComputeState(StateNode initState, GMEAction prevAction, DynamicMDPState prevState, boolean isExpanding) throws FinalStateException
     {   
-        Collection<Connection> stateConnections = initState.getConnections(thisController, tree, index);
+//        Collection<Connection> stateConnections = initState.getConnections(thisController, tree, index);
         for(Connection connect : initState.getConnections(thisController, tree, index))
         {
             for(int j = 0; j < connect.nodes.size(); j++)

@@ -116,7 +116,7 @@ public class DynamicMDPController {
     }
 
     public void setupAndRunController(double cost, double time, double gamma) throws Exception {
-        locationDir = "C:/Classes/";
+        locationDir = "C:/Classes";
         stateGenThread = 4;
         nThread = 4;
         

@@ -161,21 +161,19 @@ public class DecisionSupportConnection implements DecisionSupportInterface
 //            planFromGlobalState(s);
             globalEpisode = globalController.getEpisode();
         }
-        List<Double> rewards = globalEpisode.rewardSequence;
-        double ret = 0;
-        for (Double d : rewards) {
-            ret += d;
-        }
+//        List<Double> rewards = globalEpisode.rewardSequence;
+//        double ret = 0;
+//        for (Double d : rewards) {
+//            ret += d;
+//        }
         
         double reward = 0;
-        for(int i = 0; i < states.size() - 1; i++)
+        for(int i = 0; i < acts.size(); i++)
         {
-            reward += this.globalController.getDomainGen().getRf().reward(states.get(i), acts.get(i), states.get(i+1));
+            reward += this.globalController.getDomainGen().getRf().reward(states.get(i), acts.get(i), states.get(i));
         }
         
         return reward;
-        
-        
     }
 
     @Override
@@ -270,6 +268,8 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     public List<DynamicMDPState> getResultingStates(DynamicMDPState s, GMEAction a) 
     {
         if(!a.isApplicableInState(s)) return new ArrayList<>(); //required statement ask stefano
+        System.out.println(a.actionName());
+        System.out.flush();
         List<StateTransitionProb> tp = a.stateTransitions(s.copy(), a.copy());
         if(tp == null) return new ArrayList();
         List<DynamicMDPState> resultingStates = new ArrayList();

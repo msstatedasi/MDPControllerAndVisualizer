@@ -7,11 +7,11 @@ package dynamicmdpcontroller;
 
 import burlap.mdp.core.action.Action;
 import burlap.mdp.core.state.State;
-import burlap.mdp.singleagent.SADomain;
 import burlap.mdp.singleagent.model.RewardFunction;
 import dynamicmdpcontroller.actions.GMEAction;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -53,9 +53,8 @@ public class Reward implements RewardFunction {
         }
     }
 
-    private double rewardFunction(GMEAction a) 
-    {
-        double ret = -wt * a.getExecTime() - wc * a.getCost();
+    private double rewardFunction(GMEAction a) {
+        double ret = -wt * a.getExecTime() / maxExecutionTime - wc * a.getCost() / maxCost;
 //                / (maxExecutionTime - minExecutionTime + 1 ) 
         return ret;
     }
@@ -67,13 +66,18 @@ public class Reward implements RewardFunction {
 //        } else {
 //        return -10;
 //        }
+
         DynamicMDPState sPrime = (DynamicMDPState) state1;
         if (sPrime.isForbidden()) {
             return Double.NEGATIVE_INFINITY;
         }
         GMEAction a = (GMEAction) action;
+        if (termination.isTerminal(state1)) {
+            return 0;
+        }
         return reward.get(a);
     }
+    
 
     public void setTermination(Termination t) {
         this.termination = t;
@@ -83,8 +87,7 @@ public class Reward implements RewardFunction {
         return wt;
     }
 
-    public void setWt(double wt) 
-    {
+    public void setWt(double wt) {
         this.wt = wt;
     }
 

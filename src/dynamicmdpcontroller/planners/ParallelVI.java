@@ -5,6 +5,7 @@
  */
 package dynamicmdpcontroller.planners;
 
+import burlap.behavior.policy.GreedyQPolicy;
 import burlap.behavior.singleagent.planning.stochastic.valueiteration.ValueIteration;
 import burlap.mdp.core.action.Action;
 import burlap.mdp.core.state.State;
@@ -67,7 +68,7 @@ public class ParallelVI extends ValueIteration {
     public synchronized void valueFunctionPut(HashableState sh) {
         this.valueFunction.put(sh, this.valueInitializer.value(sh.s()));
     }
-    
+
     public List<Action> getApplicableActions(State s) {
         return this.applicableActions(s);
     }
@@ -220,6 +221,15 @@ public class ParallelVI extends ValueIteration {
         return nv;
     }
 
+    @Override
+    public GreedyQPolicy planFromState(State initialState) {
+        if (this.performReachabilityFrom(initialState) || !this.hasRunVI) {
+            this.runVI();
+        }
+
+        return new MyGreedyQPolicy(this);
+    }
+
     /**
      * This method will find all reachable states that will be used by the
      * {@link #runVI()} method and will cache all the transition dynamics. This
@@ -281,5 +291,4 @@ public class ParallelVI extends ValueIteration {
 //        return true;
 //
 //    }
-
 }

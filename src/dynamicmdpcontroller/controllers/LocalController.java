@@ -9,6 +9,7 @@ import burlap.behavior.policy.Policy;
 import burlap.behavior.policy.PolicyUtils;
 import burlap.behavior.singleagent.Episode;
 import burlap.behavior.singleagent.planning.stochastic.valueiteration.ValueIteration;
+import burlap.behavior.valuefunction.QValue;
 import burlap.mdp.core.action.Action;
 import burlap.mdp.core.state.State;
 import burlap.mdp.singleagent.SADomain;
@@ -16,6 +17,7 @@ import burlap.statehashing.simple.SimpleHashableStateFactory;
 import dynamicmdpcontroller.DynamicMDPController;
 import dynamicmdpcontroller.DynamicMDPState;
 import dynamicmdpcontroller.Termination;
+import dynamicmdpcontroller.planners.MyGreedyQPolicy;
 import dynamicmdpcontroller.planners.ParallelVI;
 import gmeconnector.entities.Location;
 import java.util.HashMap;
@@ -40,12 +42,13 @@ public class LocalController {
     private double gamma = 0;
     private double wc;
     private double wt;
+    MyGreedyQPolicy qPolicy;
 
     public LocalController(Location l, double wc, double wt, double gamma) throws Exception {
         this.l = l;
         this.wc = 1;
         this.wt = 0;
-        this.gamma = .99;
+        this.gamma = 0.9;
         initialState = init();
         stateAttributes = new HashMap<>();
     }
@@ -67,26 +70,38 @@ public class LocalController {
     }
 
     public void planFromState() throws FinalStateException {
-        if (domain.getModel().terminal(initialState)) 
-        {
+        if (domain.getModel().terminal(initialState)) {
             episode = null;
             stateAttributes.putAll(initialState.getAttributes());
             throw new FinalStateException();
         }
         SimpleHashableStateFactory hashingFactory = new SimpleHashableStateFactory(false);
-//            ValueIteration planner = new ValueIteration(domain, 0.99, hashingFactory, 1e-3, 100);
- 
+//            ValueIteration planner = new ValueIteration(domain, this.gamma, hashingFactory, 1e-3, 1000);
+
+        System.out.println("Gamma" + this.gamma);
         planner = new ParallelVI(domain, this.gamma, hashingFactory,
-                1e-10, 100, DynamicMDPController.stateGenThread, DynamicMDPController.nThread);
+                1e-10, 1000, DynamicMDPController.stateGenThread, DynamicMDPController.nThread);
         DynamicMDPState finalState = initialState;
         System.out.println("---- " + l.getName() + " is not in goal state ----");
-//                planner.performReachabilityFrom(initialState);
-        p = planner.planFromState(initialState);
-        episode = PolicyUtils.rollout(p, initialState, domain.getModel());
-        Iterator<Action> actions = episode.actionSequence.iterator();
-        
-        System.out.println("---- Actions to be executed in the " + l.getName() + ": ----");
+        planner.performReachabilityFrom(initialState);
+        planner.planFromState(initialState);
 
+        qPolicy = new MyGreedyQPolicy(planner);
+        episode = qPolicy.rolloutPolicy(initialState, domain.getModel());
+              
+        
+        
+//        List<State> states = episode.stateSequence;
+//        for (State s : states) {
+//            Iterator<QValue> qValues = planner.qValues(s).iterator();
+//            while (qValues.hasNext()) {
+//                QValue qValue = qValues.next();
+//                System.out.println("Value for action: " + qValue.a.actionName() + " = " + qValue.q);
+//            }
+//        }
+
+        Iterator<Action> actions = episode.actionSequence.iterator();
+        System.out.println("---- Actions to be executed in the " + l.getName() + ": ----");
         while (actions.hasNext()) {
             Action a = actions.next();
             System.out.print(a.actionName() + ",");
@@ -98,8 +113,10 @@ public class LocalController {
         for (Double d : rewards) {
             System.out.print(d + ", ");
         }
+        System.out.println("State values:");
+
         System.out.println();
-        System.out.println("Discounted return: " + episode.discountedReturn(0.99));
+        System.out.println("Discounted return: " + episode.discountedReturn(0.9));
         List<State> stateSequence = episode.stateSequence;
         finalState = (DynamicMDPState) stateSequence.get(stateSequence.size() - 1);
         stateAttributes.putAll(finalState.getAttributes());
@@ -126,14 +143,13 @@ public class LocalController {
     }
 
     public Episode getOptimalPathFrom(DynamicMDPState s) {
-        Episode e = PolicyUtils.rollout(p, s, domain.getModel());
+        Episode e = qPolicy.rolloutPolicy(s, domain.getModel());
+//        Episode e = PolicyUtils.rollout(p, s, domain.getModel());
         return e;
     }
 
     public DynamicMDPState getInitState() {
         return initialState;
     }
-    
-    
 
 }
