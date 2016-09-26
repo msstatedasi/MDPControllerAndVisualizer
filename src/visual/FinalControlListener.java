@@ -66,6 +66,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
     
     Visualizer thisVis;
     int index;
+    List<DynamicMDPState> hiddenStates = new ArrayList<>();
 
     /**
      * All constructor does is initialize variables
@@ -118,7 +119,30 @@ public class FinalControlListener extends ControlAdapter implements Control {
     @Override
     public void mouseClicked(MouseEvent e)
     {
-        itemClicked(null, e);
+        if(SwingUtilities.isRightMouseButton(e))
+        {
+            JPopupMenu popup = new JPopupMenu();
+            JMenuItem undoHide = new JMenuItem("Undo hide state");
+//            undoHide.setSelected(true);
+            
+            ActionListener undoHideBranch = (ActionEvent e1) -> {
+                try {
+                    undoHiddenState();
+                } catch (Exception ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            };
+            
+            if(this.hiddenStates.isEmpty()) undoHide.setEnabled(false);
+            undoHide.addActionListener(undoHideBranch);
+            popup.add(undoHide);
+            thisVis.panel.add(popup);
+            popup.show(e.getComponent(), e.getX(), e.getY());
+        }
+        else 
+        {
+            itemClicked(null, e);
+        }
     }
     
     /**
@@ -167,8 +191,6 @@ public class FinalControlListener extends ControlAdapter implements Control {
         //bring up the popup menu for nodes
         else if(item.get("type").equals("node") && SwingUtilities.isRightMouseButton(e))
         {
-
-            
             JPopupMenu popup = new JPopupMenu();
             JMenuItem gotoStateMenuItem = new JMenuItem("Go to state");
             JMenuItem expandMenuItem = new JMenuItem("expand");
@@ -180,6 +202,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
             
@@ -189,6 +213,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                 } catch (FinalStateException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
@@ -215,6 +241,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
             
@@ -229,6 +257,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
                 } catch (FinalStateException ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
+                    Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception ex) {
                     Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
@@ -247,7 +277,28 @@ public class FinalControlListener extends ControlAdapter implements Control {
     //----------------------------------------------------------------------
     //begin private functions
     
-    private void expandSelectedNode(Tuple item) throws FinalStateException, IOException
+    
+    private void undoHiddenState() throws IOException, Exception
+    {
+        DynamicMDPState stateToUnHide;
+        stateToUnHide = hiddenStates.remove(hiddenStates.size() - 1);
+        thisVis.temporaryHiddenStates.remove(stateToUnHide);
+        
+        try 
+            {
+              thisVis.setUpData(false);  
+              thisVis.updateVisualization();
+              thisVis.rehighlightPath(false, false);
+              this.resetCurrentState();
+            } 
+            catch (ParseException ex) 
+            {
+                Logger.getLogger(FinalControlListener.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        
+    }
+    
+    private void expandSelectedNode(Tuple item) throws FinalStateException, IOException, Exception
     {
         if(getPathFrom( (DynamicMDPState) currentState.get("stateClass"), (DynamicMDPState) item.get("stateClass")) == null && !currentState.get("stateClass").equals(item.get("stateClass"))) return;
         StateNode clickedState = null;
@@ -255,7 +306,8 @@ public class FinalControlListener extends ControlAdapter implements Control {
         {
 //            if(item.get("stateClass").equals(thisVis.tree.nodes.get(i).s))
             {
-                clickedState = thisVis.tree.nodes.get(item.get("stateClass"));
+            
+                clickedState = thisVis.tree.getNodeForState((DynamicMDPState) item.get("stateClass"));
             }
         }
         
@@ -272,7 +324,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
                     prevStateToClicked = (DynamicMDPState) n.getParent().get("stateClass");
                 }
                 
-                
+                System.out.println(clickedState);
                 thisVis.addComputeState(clickedState, action, prevStateToClicked, true);
                     
                 try 
@@ -294,8 +346,9 @@ public class FinalControlListener extends ControlAdapter implements Control {
         }
     }
     
-    private void ChangeCurrentState(Tuple item, boolean updateGraph) throws FinalStateException, IOException
+    private void ChangeCurrentState(Tuple item, boolean updateGraph) throws FinalStateException, IOException, Exception
     {
+        this.hiddenStates = new ArrayList();
         thisVis.temporaryHiddenStates = new HashMap<>();
         thisVis.temporaryHiddentStateNodes = new HashMap<DynamicMDPState, StateNode>();
             clickedAction = (GMEAction) item.get("CriteriaAction");
@@ -365,7 +418,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
             
     }
     
-    private void goToState(VisualItem item) throws FinalStateException, IOException
+    private void goToState(VisualItem item) throws FinalStateException, IOException, Exception
     {
         ContainerOfActionAndStateSeqence container = getPathFrom((DynamicMDPState) currentState.get("stateClass"), (DynamicMDPState) item.get("stateClass"));
         
@@ -420,6 +473,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
             }
 
             thisVis.temporaryHiddenStates.put((DynamicMDPState) n.get("stateClass"), (DynamicMDPState) n.get("stateClass"));
+            this.hiddenStates.add((DynamicMDPState) n.get("stateClass"));
 
 
             for(int i = 0; i < childNodes.size(); i++)
@@ -429,7 +483,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
         }
     }
     
-    private void handleHideEdge(VisualItem item) throws ParseException, FinalStateException, IOException
+    private void handleHideEdge(VisualItem item) throws ParseException, FinalStateException, IOException, Exception
     {
         if(thisVis.tree.statesTaken.contains((DynamicMDPState) item.get("srcState")) &&
                 thisVis.tree.statesTaken.contains((DynamicMDPState) item.get("resultState")))
@@ -477,7 +531,7 @@ public class FinalControlListener extends ControlAdapter implements Control {
         toBeRemoved.states.add((DynamicMDPState) e.getTargetNode().get("stateClass"));
 //        newHiddenStateNode.connections.put(toBeRemoved.action.actionName(), toBeRemoved);
         thisVis.temporaryHiddentStateNodes.put(newHiddenStateNode.s, newHiddenStateNode);
-        
+        //------------------------------------------------------------------------------------------------------------------------------------------------
         hideNodes(removeNode, e.getSourceNode());
             try 
             {
@@ -656,7 +710,6 @@ public class FinalControlListener extends ControlAdapter implements Control {
         List<DynamicMDPState> statePath = new ArrayList();
         List<DynamicMDPState> reverseStatePath = new ArrayList();
         getPathFrom(end, n, reversePath, null, reverseStatePath);
-        
         
         for(int i = reverseStatePath.size() - 1; i >= 0; i--)
         {

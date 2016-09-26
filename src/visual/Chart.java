@@ -3,7 +3,9 @@ package visual;
 import java.awt.Color; 
 import java.awt.BasicStroke; 
 import java.awt.GridLayout;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 import org.jfree.chart.ChartPanel; 
 import org.jfree.chart.JFreeChart; 
 import org.jfree.data.xy.XYDataset; 
@@ -21,7 +23,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
  * This class charts the various rewards of being in states and executing actions depending on the reward function specified.
  * @author jlewis
  */
-public class Chart extends ApplicationFrame 
+public class Chart
 {
       finalNumberFormat xFormat = new finalNumberFormat(true);
       finalNumberFormat yFormat = new finalNumberFormat(false);
@@ -40,13 +42,14 @@ public class Chart extends ApplicationFrame
       StateValueContainer chosenSVC;
       ActionValueContainer chosenAVC;
       XYLineAndShapeRenderer renderer;
+      JFrame frame;
       
       /**
        * Closes the frame tied to this instance.
        */
     public void close()
     {
-        this.dispose();
+        frame.dispose();
     }
     /**
      * This function sets up the charts according to how valueContainer and actionValueContiner are filled
@@ -55,7 +58,9 @@ public class Chart extends ApplicationFrame
      */
    public Chart(StateValueContainer valueContainer, ActionValueContainer actionValueContainer)
     {
-        super("Comparisons of rewards");
+//        super("Comparisons of rewards");
+        frame = new JFrame("Comparisons of rewards");
+//        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         svc = valueContainer;
         xylineChart = ChartFactory.createXYLineChart(
              "" ,
@@ -80,9 +85,11 @@ public class Chart extends ApplicationFrame
         JPanel p = new JPanel(new GridLayout(2, 1));
         p.add(stateChartPanel);
         p.add(actionChartPanel);
-        this.add(p);
-        this.pack( );                    
-        this.setVisible( true ); 
+        frame.add(p);
+        frame.pack( );                    
+        frame.setVisible( true ); 
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        
         chosenActions = new XYSeries("Chosen Actions");
         chosenStates = new XYSeries("Chosen States");
         chosenCumulativeActions = new XYSeries("Chosen Cumulative Actions");

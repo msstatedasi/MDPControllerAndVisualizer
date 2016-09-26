@@ -19,6 +19,8 @@ import dynamicmdpcontroller.actions.GMEAction;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -29,6 +31,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.WindowConstants;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableColumn;
@@ -160,15 +163,37 @@ public class DataDisplay implements ItemListener
         
         
         JPanel jpanel = new JPanel();
-        jpanel.setLayout(new GridLayout(1, 0));
-        jpanel.add(stateTreeView);
-        jpanel.add(actionTreeView);
-        jpanel.add(resultStateTreeView);
-        jpanel.setPreferredSize(new Dimension(700, 500));
+//        jpanel.setLayout(new GridLayout(1, 0));
+//        jpanel.add(stateTreeView);
+//        jpanel.add(actionTreeView);
+//        jpanel.add(resultStateTreeView);
+//        jpanel.setPreferredSize(new Dimension(700, 500));
+        jpanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipadx = 100;
+        c.gridx = 0;
+        c.gridy = 0;
+        jpanel.add(stateTreeView, c);
+        
+        c.gridx = 1;
+        c.gridy = 0;
+
+        jpanel.add(actionTreeView, c);
+        
+        c.gridx = 2;
+        c.gridy = 0;
+        jpanel.add(resultStateTreeView, c);
+        
+        c.gridx = 0;
+        c.gridy = 1;
+        jpanel.add(this.ignoreDegCheckBox, c);
                 
         treeFrame.add(jpanel);
         treeFrame.pack();
         treeFrame.setVisible(true);
+        treeFrame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         
         
 
@@ -307,9 +332,11 @@ public class DataDisplay implements ItemListener
         tree.updateUI();
 //        jtree.add(top);
         JScrollPane treeView = new JScrollPane(tree);
+        workingHTCR.equalSignCheck = true;
         if(addSelectionListener)
         {
             tree.addTreeSelectionListener(new MyTreeSelectionListener());
+            workingHTCR.equalSignCheck = false;
         }
        
 //        treeView.setPreferredSize(new Dimension(600, 600));
@@ -620,7 +647,6 @@ public class DataDisplay implements ItemListener
                 frame = new JFrame();
            }
            
-
             table = new JTable(values, attributeNamesArr);
             table.setEnabled(false);
             scroll = new JScrollPane(table);
@@ -642,6 +668,7 @@ public class DataDisplay implements ItemListener
         private final Color rollOverRowColor = new Color(220, 240, 255);
         private final TreeCellRenderer renderer;
         public List<String> q;
+        boolean equalSignCheck;
         public HighlightTreeCellRenderer(TreeCellRenderer renderer) 
         {
             q = new ArrayList<>();
@@ -670,6 +697,11 @@ public class DataDisplay implements ItemListener
                     {
                         String valueStr = value.toString();
                         if(valueStr.split(" = ").length == 2 && q.get(i).contains(valueStr.split(" = ")[0]))//if(valueStr.contains(q.get(i)))//if(StringUtils.containsIgnoreCase(valueStr, q.get(i)))
+                        {
+                            shouldHighlight = true;
+                            break;
+                        }
+                        else if(q.get(i).split("_")[3].contains(valueStr) && !equalSignCheck)
                         {
                             shouldHighlight = true;
                             break;

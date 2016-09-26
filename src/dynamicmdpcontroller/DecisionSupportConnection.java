@@ -91,7 +91,7 @@ public class DecisionSupportConnection implements DecisionSupportInterface
     }
 
     @Override
-    public List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState s) throws FinalStateException {
+    public List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState s) throws FinalStateException, Exception {
         if (globalEpisode == null) 
         {
             try {

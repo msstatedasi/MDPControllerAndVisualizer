@@ -17,7 +17,7 @@ import java.util.List;
 public interface DecisionSupportInterface {
     
     List<GMEAction> getLocalOptimalPathActions(int index, DynamicMDPState d) throws FinalStateException;
-    List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState d)throws FinalStateException;
+    List<GMEAction> getGlobalOptimalPathActions(DynamicMDPState d)throws FinalStateException, Exception;
     List<DynamicMDPState> getGlobalOptimalPath(DynamicMDPState s) throws FinalStateException;
     List<DynamicMDPState> getLocalOptimalPath(int index, DynamicMDPState s) throws FinalStateException;
     double getGlobalPathReward(List<DynamicMDPState> states, List<GMEAction> acts) throws FinalStateException;

@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 import prefuse.action.layout.graph.NodeLinkTreeLayout;
 import prefuse.data.Tree;
 import prefuse.visual.NodeItem;
@@ -127,15 +128,19 @@ public final class Visualizer
     /**
      * This function will close the {@link visual.DataDisplay} and this class.
      */
-    public void closeWindows() throws FinalStateException, IOException, ParseException
+    public void closeWindows() throws FinalStateException, IOException, ParseException, Exception
     {
         if(frame != null && dataDisplay != null)
         {
             frame.dispose();
-            chart.close();
+//            chart.close();
             if(index != -1) mba.PathFinished(lastComputeState.thisState.s);
         }
 
+    }
+    public void closeChart()
+    {
+        this.chart.close();
     }
     
     /**
@@ -150,7 +155,7 @@ public final class Visualizer
      * @throws IOException
      * @throws ParseException 
      */
-    public Visualizer(StateTree tree, List<String> allAttribs, List<GMEAction> actions, MyController controller, double degredation, int index, DataDisplay dd, Manager.buttonAction m) throws IOException, ParseException, FinalStateException
+    public Visualizer(StateTree tree, List<String> allAttribs, List<GMEAction> actions, MyController controller, double degredation, int index, DataDisplay dd, Manager.buttonAction m) throws IOException, ParseException, FinalStateException, Exception
     {
         mba = m;
         this.dataDisplay = dd;
@@ -221,10 +226,11 @@ public final class Visualizer
         d.addControlListener(mouse); //controls when you click node or edge
         
         frame = new JFrame("Burlap Visualizer");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.add(d);
         frame.pack();
         frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         
         //these layouts were defined in setUpActions()
         vis.run("color");
@@ -366,7 +372,7 @@ public final class Visualizer
      * how nodes connect to other nodes.
      * @throws ParseException 
      */
-    public void setUpData(boolean init) throws ParseException, FinalStateException, IOException
+    public void setUpData(boolean init) throws ParseException, FinalStateException, IOException, Exception
     {
         //this checks to see 
         if(lastComputeState != null && thisController.isTerminal(index, lastComputeState.thisState.s)) this.closeWindows();
@@ -563,8 +569,6 @@ public final class Visualizer
         setUpOptimalNodes(n);
 
         //end optimal path loop
-        
-        
         //paths other than the otimal one
         //visibleStates.get(i) represents a list of states that represent one path
         //visibleAction.get(i) represents a list of actions that represent one path
@@ -805,7 +809,7 @@ public final class Visualizer
         {
             for(int a = 0; a < cont.states.size(); a++)
             {
-                newCompute.prevStates.add(tree.nodes.get(cont.states.get(a)));
+                newCompute.prevStates.add(tree.getNodeForState(cont.states.get(a)));
             }
             for(int a = 0; a < cont.actions.size(); a++)
             {
@@ -829,6 +833,7 @@ public final class Visualizer
     public void addComputeState(StateNode initState, GMEAction prevAction, DynamicMDPState prevState, boolean isExpanding) throws FinalStateException
     {   
 //        Collection<Connection> stateConnections = initState.getConnections(thisController, tree, index);
+        System.out.println(initState);
         for(Connection connect : initState.getConnections(thisController, tree, index))
         {
             for(int j = 0; j < connect.nodes.size(); j++)
@@ -845,6 +850,7 @@ public final class Visualizer
                 newCompute = new ComputeState();
                 for(int a = 0; a < chosenStates.size(); a++)
                 {
+                    if(tree.getNodeForState(chosenStates.get(a)) == null) System.exit(666);
                     newCompute.prevStates.add(tree.getNodeForState(chosenStates.get(a)));
                 }
                 for(int a = 0; a < chosenActions.size(); a++)
@@ -897,6 +903,8 @@ public final class Visualizer
                     GMEAction plannedAct = thisController.getActionMap(index).get(newCompute.ea.actionSequence.get(k).actionName());
                     proposedPath.add(plannedAct);
                 }
+                System.out.println(newCompute.prevStates);
+                System.out.flush();
                 for(int k = 0; k < newCompute.prevStates.size(); k++)
                 {
                     proposedPathStates.add(newCompute.prevStates.get(k).s);
@@ -960,7 +968,7 @@ public final class Visualizer
  * @param prevAction
  * @param changeCurrentState 
  */
-    public void generateComputeStates(StateNode initState, GMEAction prevAction, boolean changeCurrentState) throws FinalStateException 
+    public void generateComputeStates(StateNode initState, GMEAction prevAction, boolean changeCurrentState) throws FinalStateException, Exception 
     {
         DynamicMDPState prevState = null;
         for(int i = 0; i < oldComputeStates.size(); i++)
@@ -1068,51 +1076,51 @@ public final class Visualizer
             {
                 return testState;
             }
-            
-            else if(testState.ea.stateSequence.contains(state))
-            {
-                inEA = true;
-                index = i;
-                subIndex = testState.ea.stateSequence.indexOf( (State) s.s) + 1;
-                break;
-            }
+//            
+//            else if(testState.ea.stateSequence.contains(state))
+//            {
+//                inEA = true;
+//                index = i;
+//                subIndex = testState.ea.stateSequence.indexOf( (State) s.s) + 1;
+//                break;
+//            }
         }
-        ComputeState newCompute = new ComputeState();
-        
-        if(inEA)
-        {
-            //fill prev states
-            for(int i = 0; i < chosenStates.size() - 1; i++)
-            {
-                newCompute.prevStates.add(tree.getNodeForState(chosenStates.get(i)));
-            }
-            newCompute.thisState = tree.getNodeForState(chosenStates.get(chosenStates.size() - 1)); //last element of chosenStates is currentState
-            
-            //fill prevActions
-            for(int i = 0; i < chosenActions.size(); i++)
-            {
-                newCompute.prevActions.add(chosenActions.get(i));
-            }
-            
-            newCompute.ea = new Episode();
-            
-            //fill the ea with the proper info
-            for(int i = subIndex; i < oldComputeStates.get(index).ea.stateSequence.size(); i++)
-            {
-                newCompute.ea.stateSequence.add(oldComputeStates.get(index).ea.stateSequence.get(i));
-            }
-            
-            for(int i = subIndex; i < oldComputeStates.get(index).ea.actionSequence.size(); i++)
-            {
-                newCompute.ea.actionSequence.add(oldComputeStates.get(index).ea.actionSequence.get(i));
-            }
-             
-
-
-            //no need to compute reward since all computed states that are added
-            //already meet the reward criteria
-            return newCompute;
-        }
+//        ComputeState newCompute = new ComputeState();
+//        
+//        if(inEA)
+//        {
+//            //fill prev states
+//            for(int i = 0; i < chosenStates.size() - 1; i++)
+//            {
+//                newCompute.prevStates.add(tree.getNodeForState(chosenStates.get(i)));
+//            }
+//            newCompute.thisState = tree.getNodeForState(chosenStates.get(chosenStates.size() - 1)); //last element of chosenStates is currentState
+//            
+//            //fill prevActions
+//            for(int i = 0; i < chosenActions.size(); i++)
+//            {
+//                newCompute.prevActions.add(chosenActions.get(i));
+//            }
+//            
+//            newCompute.ea = new Episode();
+//            
+//            //fill the ea with the proper info
+//            for(int i = subIndex; i < oldComputeStates.get(index).ea.stateSequence.size(); i++)
+//            {
+//                newCompute.ea.stateSequence.add(oldComputeStates.get(index).ea.stateSequence.get(i));
+//            }
+//            
+//            for(int i = subIndex; i < oldComputeStates.get(index).ea.actionSequence.size(); i++)
+//            {
+//                newCompute.ea.actionSequence.add(oldComputeStates.get(index).ea.actionSequence.get(i));
+//            }
+//             
+//
+//
+//            //no need to compute reward since all computed states that are added
+//            //already meet the reward criteria
+//            return newCompute;
+//        }
         
         
         return null;

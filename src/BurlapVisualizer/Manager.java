@@ -47,6 +47,7 @@ public class Manager {
     List<DynamicMDPState> finalStates;
     List<String> globalAttribs;
     DecisionSupportConnection dsc;
+    boolean visualizerRunning = false;
 
     /**
      * This function is only called by {@link BurlapVisualizer.TestProject} when the
@@ -55,7 +56,7 @@ public class Manager {
      * All this function does is call {@link visual.Visualizer#closeWindows() }
      * to close all windows with the old initial state.
      */
-    public void close() throws FinalStateException, IOException, ParseException {
+    public void close() throws FinalStateException, IOException, ParseException, Exception {
         if(MDPvisual != null) MDPvisual.closeWindows();
     }
 
@@ -126,8 +127,9 @@ public class Manager {
             this.button = button;
         }
         
-        public void PathFinished(DynamicMDPState s) throws FinalStateException, IOException, ParseException
+        public void PathFinished(DynamicMDPState s) throws FinalStateException, IOException, ParseException, Exception
         {
+            visualizerRunning = false;
             finalStates.add(s);
             if(numOfPushedButtons == controllerNames.size())
             {
@@ -142,7 +144,7 @@ public class Manager {
         }
         
         
-        public void handleGlobalPath(DynamicMDPState s) throws IOException, ParseException
+        public void handleGlobalPath(DynamicMDPState s) throws IOException, ParseException, Exception
         {
             try
             {
@@ -165,7 +167,7 @@ public class Manager {
 
                 MDPvisual = new Visualizer(tree, globalAttribs, allPosActions, c, degredation, -1, dd, this);//the visualizer takes over from here
             } catch (FinalStateException ex) {
-                return;
+//                return;
 //                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -173,6 +175,9 @@ public class Manager {
         @Override
         public void actionPerformed(ActionEvent e) 
         {
+            if(visualizerRunning) return;
+            visualizerRunning = true;
+            if(MDPvisual != null) MDPvisual.closeChart();
             try 
             {
                 numOfPushedButtons++;
@@ -222,6 +227,8 @@ public class Manager {
                 
                 
             } catch (FinalStateException | IOException | ParseException ex) {
+                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
                 Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

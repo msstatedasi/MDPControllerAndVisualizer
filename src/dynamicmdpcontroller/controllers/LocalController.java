@@ -48,7 +48,7 @@ public class LocalController {
         this.l = l;
         this.wc = 1;
         this.wt = 0;
-        this.gamma = 0.9;
+        this.gamma = gamma;
         initialState = init();
         stateAttributes = new HashMap<>();
     }

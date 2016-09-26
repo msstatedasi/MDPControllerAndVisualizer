@@ -161,7 +161,7 @@ public class MyController extends DynamicMDPController {
     }
     
     //this function gets only the OPTIMAL episode in each local Controller
-    public Episode getEpisode(int index) throws FinalStateException
+    public Episode getEpisode(int index) throws FinalStateException, Exception
     {
         List<DynamicMDPState> states;
         List<GMEAction> actions;
